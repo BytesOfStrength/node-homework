@@ -81,15 +81,18 @@ Node embeds V8 engine as its JavaScript runtime. Node.js adds V8’s capabilitie
 - **CommonJS** uses synchronous run-time loaded modules. Since Node uses server-side code, the local files can load synchronously and still not block the user’s UI (user interface). There is some flexibility with CJS. For example, since 'require' can be called at runtime, it can be within an 'if' statement and can load modules only when needed.
 
 - **ES Modules** supports asynchronous/dynamic loading. The browser may need to run multiple blocks of code, but by doing it asynchronously, it will allow parts of code to run in the background and not delay parts of other code that may not take as much time to run without waiting for the larger code to finish. This is ideal for browsers to run optimally.
+- **Static vs Dynamic Loading:**
+  While the import statements may be static and must be at the top level, the import() function is dynamic.
+  - **Key use cases for Dynamic imports:** -**Conditional Loading:** Only loading a module if condition statement is met such as in an if statement. -**Performance/Late Loading:** Loading only after a delay for data-intensive modules until they are needed to save memory or time to start the code -**Dependency Management:** Loading modules when specific data meets certain criteria that isn't available at start-up
 
 - CommonJS and ES Modules are module systems that are used for importing or exporting code.
   - **Browser Support:**
     CommonJS and ES module support are available to Node.js ,but only ES modules are available to use with running JavaScript in the Browser. Legacy Node.js could only use CommonJS in the past, but after version 12, Node.js can use ES modules to write code if it has an extension '.mjs' or if you list in package.json file 'type':'module'
 
   - **Syntax differences:**
-    - CommonJS uses the word 'require' to import objects, functions but ES modules use the word 'import':
+    - CommonJS uses the require() to import objects, functions but ES modules use the word 'import':
 
-    - ES Modules must write out import at the beginning of the code, but CJS can write a require statement within an if block to import code
+    - ES Modules must write out import at the top level of the code, but CJS can write a require statement within an if block to import code
 
     - CommonJS uses the word 'module.exports' to export code, but ES modules use the terms 'export default' or 'export' followed by the name of the function.
 
@@ -110,6 +113,15 @@ import fs from "fs";
 export const friend = () => {
   console.log("Hello Friend, we import your positivity");
 };
+```
+
+```js
+//Example using Dynamic ESM
+//Used inside an async function or at the top level of a module
+if (needsCapitalization) {
+  const module = await import("./module.js");
+  const data = module.default;
+}
 ```
 
 References:
