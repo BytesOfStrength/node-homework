@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "1kb" }));
+global.user_id = null;
+global.users = [];
+global.tasks = [];
 app.use((req, res, next) => {
   console.log(
     `Request Method: ${req.method}, Request Path: ${req.path}, Request Query:`,
@@ -9,11 +12,14 @@ app.use((req, res, next) => {
   next();
 });
 app.get("/", (req, res) => {
-  res.send("Hello, World!");
+  res.json({message:"Hello, World!"});
 });
-app.post("/testpost", (req, res) => {
+/*app.post("/testpost", (req, res) => {
   res.status(200).send("POST request received!");
-});
+});*/
+const userRouter = require("./routes/userRoutes");
+app.use("/api/users", userRouter);
+
 const notFound = require("./middleware/not-found.js");
 app.use(notFound);
 
