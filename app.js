@@ -11,15 +11,20 @@ app.use((req, res, next) => {
   );
   next();
 });
+const userRouter = require("./routes/userRoutes");
+const authMiddleware = require("./middleware/auth");
+const taskRouter = require("./routes/taskRoutes");
+
 app.get("/", (req, res) => {
-  res.json({message:"Hello, World!"});
+  res.json({ message: "Hello, World!" });
 });
 /*app.post("/testpost", (req, res) => {
   res.status(200).send("POST request received!");
 });*/
-const userRouter = require("./routes/userRoutes");
-app.use("/api/users", userRouter);
 
+//const userRouter = require("./routes/userRoutes");
+app.use("/api/users", userRouter);
+app.use("/api/tasks", authMiddleware, taskRouter);
 const notFound = require("./middleware/not-found.js");
 app.use(notFound);
 
