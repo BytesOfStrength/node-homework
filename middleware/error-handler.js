@@ -1,6 +1,13 @@
 const { StatusCodes } = require("http-status-codes");
 
 const errorHandlerMiddleware = (err, req, res, next) => {
+  //5b added section
+  if (err.code === "ECONNREFUSED" && err.port === 5432) {
+    // the postgresql port
+    console.log(
+      "The database connection was refused.  Is your database service running?",
+    );
+  }
   console.error(
     "Internal server error: ",
     err.constructor.name,
@@ -10,7 +17,7 @@ const errorHandlerMiddleware = (err, req, res, next) => {
   if (!res.headersSent) {
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({message:"An internal server error occurred."});
+      .json({ message: "An internal server error occurred." });
   }
 };
 
