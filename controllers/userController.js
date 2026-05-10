@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
+const pool = require("../db/pg-pool");
 const crypto = require("crypto");
 const util = require("util");
 const scrypt = util.promisify(crypto.scrypt);
@@ -18,27 +19,43 @@ async function comparePassword(inputPassword, storedHash) {
 }
 
 //function register which pushes the name of the newUser information onto the array newUser
-/*const register = (req, res) => {
-  const newUser = { ...req.body }; // this makes a copy
-*/
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   if (!req.body) req.body = {};
   const { error, value } = userSchema.validate(req.body, { abortEarly: false });
-  //const {error, value} = userSchema.validate({name: "Bob", email: "nonsense", password: "password", favoriteColor: "blue"}, {abortEarly: false})
   if (error) {
     //return 400 if validation fails
     return res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
   }
   //3. Check if user exists already using cleaned 'value.email')
-  const existingUser = global.users.find((u) => u.email === value.email);
-  if (existingUser) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "User already exists" });
+  let user = null;
+  value.hashed_password = await hashPassword(value.password);
+  // the code to here is like the in-memory version
+  try {
+    user = await pool.query(
+      `INSERT INTO users (email, name, hashed_password) 
+      VALUES ($1, $2, $3) RETURNING id, email, name`,
+      [value.email, value.name, value.hashed_password],
+    );
+    const newUser = user.rows[0];
+    global.user_id = newUser.id;
+    //lesson 5B instructions say in register function to return a body with only name and email
+    res
+      .status(StatusCodes.CREATED)
+      .json({ name: newUser.name, email: newUser.email });
+    // note that you use a parameterized query
+  } catch (e) {
+    // the email might already be registered
+    if (e.code === "23505") {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: "User already exists" });
+      // this means the unique constraint for email was violated
+    }
+    return next(e); // all other errors get passed to the error handler
   }
-  //Hash password before storing
-  //we wait for crypto library to finish hasing before we push user into global.users array
-  const hashedPassword = await hashPassword(value.password);
+};
+
+/*in Lesson 5b we remove using a loop function to find if the user is existing 
   //4. For validate section use value to create the user replace req.body with value
 
   //const newUser = { ...value }; // this makes a copy
@@ -47,37 +64,40 @@ const register = async (req, res) => {
     email: value.email,
     password: hashedPassword, //store hashed pwd not plain text pwd
   };
-  global.users.push(newUser);
-  global.user_id = newUser; // After the registration step, the user is set to logged on.
-  /*delete req.body.password;
-  res.status(StatusCodes.CREATED).json(req.body);*/
-  // return user without hash
-  const { password, ...sanitizedUser } = value;
-  //delete req.body.password;
-  //res.status(StatusCodes.CREATED).json(req.body);
-  res.status(StatusCodes.CREATED).json(sanitizedUser);
-};
+ */
 
-const logon = async (req, res) => {
+const logon = async (req, res, next) => {
   const { email, password } = req.body;
-  const user = global.users.find(
-    (person) => person.email === email?.toLowerCase(),
-  );
+  const lowCaseEmail = email?.toLowerCase();
 
-  //if (user && user.password === password) {
-  if (user && (await comparePassword(password, user.password))) {
-    global.user_id = user;
-    //key portion is from the JSON object information for the body we provided via postman
-    res.status(StatusCodes.OK).json({ name: user.name, email: user.email });
-  } else {
-    res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ message: "Authentication Failed. " });
+  try {
+    const result = await pool.query("SELECT * FROM users WHERE email = $1", [
+      lowCaseEmail,
+    ]);
+    if (result.rows.length === 0) {
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ message: "Authentication Failed." });
+    }
+
+    const user = result.rows[0];
+    const isMatched = await comparePassword(password, user.hashed_password);
+
+    if (isMatched) {
+      global.user_id = user.id;
+      res.status(StatusCodes.OK).json({ name: user.name, email: user.email });
+    } else {
+      res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ message: "Authentication Failed." });
+    }
+  } catch (e) {
+    return next(e);
   }
 };
 
 const logoff = (req, res) => {
   global.user_id = null;
-  res.sendStatus(StatusCodes.OK).json({ message: "Logged Off" });
+  res.sendStatus(StatusCodes.OK);
 };
 module.exports = { register, logon, logoff };

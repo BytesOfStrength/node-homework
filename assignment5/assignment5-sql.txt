@@ -1,0 +1,33 @@
+#Task 1: Find the total price of each of the first 5 orders, ordered by order_id.
+
+SELECT o.order_id, SUM(p.price * l.quantity) AS total_price FROM orders o JOIN line_items l  ON o.order_id = l.order_id JOIN products p ON l.product_id= p.product_id GROUP BY o.order_id ORDER BY o.order_id LIMIT 5;
+
+#Task 2: Understanding Subqueries
+#For each customer find the average total price of their orders, and return the results ordered by customer name
+
+SELECT c.customer_name, AVG(t.total_price) AS average_order_price FROM customers c JOIN (SELECT o.customer_id, SUM(p.price*l.quantity) as total_price FROM orders o JOIN line_items l ON o.order_id = l.order_id JOIN products p ON l.product_id = p.product_id GROUP BY o.order_id, o.customer_id) AS t ON c.customer_id = t.customer_id GROUP BY c.customer_id, c.customer_name ORDER BY c.customer_name;
+
+#Task 3: Creating a new order 
+
+#Task 3a. Statement to find customer_id for Perez and Sons
+
+SELECT customer_id FROM customers WHERE customer_name = 'Perez and Sons';
+
+#Task 3b find employee_id for Miranda Harris
+
+SELECT employee_id FROM employees WHERE last_name = 'Harris' AND first_name = 'Miranda';
+
+#Task 3c Find least expensive 5 products
+
+SELECT product_id, price FROM products ORDER BY price ASC LIMIT 5;
+
+BEGIN;
+INSERT INTO orders (customer_id, employee_id, date) VALUES (16, 7, '2026-05-02') RETURNING order_id;
+INSERT INTO line_items (order_id, product_id, quantity) VALUES (257, 23, 10), (257, 18, 10),(257, 43, 10), (257, 9, 10), (257, 44, 10);
+COMMIT;
+
+SELECT * FROM line_items WHERE order_id = 257;
+
+#Task 4 Aggregation with Having 
+
+SELECT first_name, last_name, COUNT(order_id) AS order_count FROM employees e JOIN orders o ON o.employee_id = e.employee_id GROUP BY first_name, last_name, e.employee_id HAVING COUNT (order_id) > 5 ORDER BY last_name;

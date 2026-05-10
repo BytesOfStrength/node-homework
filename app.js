@@ -2,8 +2,6 @@ const express = require("express");
 const app = express();
 app.use(express.json({ limit: "1kb" }));
 global.user_id = null;
-global.users = [];
-global.tasks = [];
 app.use((req, res, next) => {
   console.log(
     `Request Method: ${req.method}, Request Path: ${req.path}, Request Query:`,
@@ -14,15 +12,26 @@ app.use((req, res, next) => {
 const userRouter = require("./routes/userRoutes");
 const authMiddleware = require("./middleware/auth");
 const taskRouter = require("./routes/taskRoutes");
+const pool = require("./db/pg-pool");
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello, World!" });
 });
+app.get("/health", async (req, res) => {
+  try {
+    await pool.query("SELECT 1");
+    res.json({ status: "ok", db: "connected" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ message: `db not connected, error: ${err.message}` });
+  }
+});
+
 /*app.post("/testpost", (req, res) => {
   res.status(200).send("POST request received!");
 });*/
 
-//const userRouter = require("./routes/userRoutes");
 app.use("/api/users", userRouter);
 app.use("/api/tasks", authMiddleware, taskRouter);
 const notFound = require("./middleware/not-found.js");
@@ -53,6 +62,7 @@ async function shutdown(code = 0) {
     await new Promise((resolve) => server.close(resolve));
     console.log("HTTP server closed.");
     // If you have DB connections, close them here
+    await pool.end();
   } catch (err) {
     console.error("Error during shutdown:", err);
     code = 1;
