@@ -40,19 +40,23 @@ const create = async (req, res, next) => {
   res.status(StatusCodes.CREATED).json(newTask);
 };*/
 //index GET /api/tasks
-const index = async (req, res) => {
-  const tasks = await prisma.task.findMany({
-    where: {
-      userId: global.user_id,
-    },
-    select: { title: true, isCompleted: true, id: true },
-  });
-  if (tasks.length === 0) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ message: "No tasks found" });
+const index = async (req, res, next) => {
+  try {
+    const tasks = await prisma.task.findMany({
+      where: {
+        userId: global.user_id,
+      },
+      select: { title: true, isCompleted: true, id: true },
+    });
+    if (tasks.length === 0) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "No tasks found" });
+    }
+    res.status(StatusCodes.OK).json(tasks);
+  } catch (err) {
+    return next(err);
   }
-  res.status(StatusCodes.OK).json(tasks);
 };
 
 /*

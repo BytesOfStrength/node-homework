@@ -52,8 +52,6 @@ const register = async (req, res, next) => {
     }
     return next(err);
   }
-
-  
 };
 /*
     user = await pool.query(
