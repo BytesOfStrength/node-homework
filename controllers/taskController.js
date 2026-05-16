@@ -16,12 +16,14 @@ const create = async (req, res, next) => {
         title: value.title,
         isCompleted: value.isCompleted ?? false,
         userId: global.user_id,
+        priority: value.priority ?? "medium",
       },
       //which columns to return which is the body of the response and make sure just like lesson 5 userId is not sent back in the response
       select: {
         id: true,
         title: true,
         isCompleted: true,
+        priority: true,
       },
     });
     res.status(StatusCodes.CREATED).json(newTask);
