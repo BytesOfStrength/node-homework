@@ -39,6 +39,9 @@ const register = async (req, res, next) => {
         data: value, // this uses name, email, and hashedPassword from 'value'
         select: { name: true, email: true, id: true, createdAt: true },
       });
+      //Lesson 7 simulate Rollback Temp code for assignment: for task failure
+      //throw new Error("Simulated Welcome Task Failure");
+
       const welcomeTasksData = [
         {
           title: "Complete your profile",
