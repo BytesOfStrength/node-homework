@@ -17,4 +17,14 @@ const patchTaskSchema = Joi.object({
   .min(1)
   .message("No attributes to change were specified.");
 
-module.exports = { taskSchema, patchTaskSchema };
+const taskPaginationSchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1).messages({
+    "number.min": "Page must be one or greater.",
+  }),
+  limit: Joi.number().integer().min(1).max(100).default(10).messages({
+    "number.min": "Limit needs to be between 1 and 100.",
+    "number.max": "Limit needds to be between 1 and 100.",
+  }),
+}).unknown(true); //allows filtering params lioke "?find" to pass through
+
+module.exports = { taskSchema, patchTaskSchema, taskPaginationSchema };
