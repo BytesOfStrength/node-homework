@@ -6,6 +6,51 @@ const {
   taskPaginationSchema,
 } = require("../validation/taskSchema");
 const prisma = require("../db/prisma");
+
+//POST / api / tasks / bulk;
+const bulkCreate = async (req, res, next) => {
+  const { tasks } = req.body;
+
+  //Validate the tasks array
+  if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of tasks.",
+    });
+  }
+  //Validate all tasks before insertion
+  const validTasks = [];
+  for (const task of tasks) {
+    const { error, value } = taskSchema.validate(task);
+    if (error) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: error.details,
+      });
+    }
+    validTasks.push({
+      title: value.title,
+      isCompleted: value.isCompleted || false,
+      priority: value.priority || "medium",
+      userId: global.user_id,
+    });
+  }
+
+  // Use createMany for batch insertion
+  try {
+    const result = await prisma.task.createMany({
+      data: validTasks,
+      skipDuplicates: false,
+    });
+
+    res.status(201).json({
+      message: "success!",
+      tasksCreated: result.count,
+      totalRequested: validTasks.length,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
 //need create
 const create = async (req, res, next) => {
   if (!req.body) req.body = {};
@@ -256,4 +301,4 @@ const deleteTask = async (req, res, next) => {
     }
   }
 };
-module.exports = { create, index, show, update, deleteTask };
+module.exports = { bulkCreate, create, index, show, update, deleteTask };
