@@ -186,12 +186,12 @@ const searchTasks = async (req, res, next) => {
   try {
     //Get Search term for q
     const searchQuery = value.q;
-    //validate search query
-    /*REMOVE BECAUSE OF JOI validation with separate schema file if (!searchQuery || searchQuery.trim().length < 2) {
+    //validate search query to check due to lesson requirements although Joi schema also created
+     if (!searchQuery || searchQuery.trim().length < 2) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         error: "Search query must be at least 2 characters long",
       });
-    }*/
+    }
     const limit = parseInt(value.limit) || 20;
 
     //Lesson7: Limit validation on searches

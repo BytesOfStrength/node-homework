@@ -23,7 +23,7 @@ const taskPaginationSchema = Joi.object({
   }),
   limit: Joi.number().integer().min(1).max(100).default(10).messages({
     "number.min": "Limit needs to be between 1 and 100.",
-    "number.max": "Limit needds to be between 1 and 100.",
+    "number.max": "Limit needs to be between 1 and 100.",
   }),
 }).unknown(true); //allows filtering params lioke "?find" to pass through
 

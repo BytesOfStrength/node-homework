@@ -12,7 +12,7 @@ const analyticsPaginationSchema = Joi.object({
 const analyticsSearchSchema = Joi.object({
   q: Joi.string().trim().min(2).required().messages({
     "string.min": "Search query must be at least 2 characters long",
-    "any.required": "Search query parameter 'q' is requerired",
+    "any.required": "Search query parameter 'q' is required",
   }),
   limit: Joi.number().integer().min(1).max(100).default(20).messages({
     "number.min": "Limit needs to be between 1 and 100.",

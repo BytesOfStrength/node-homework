@@ -43,7 +43,8 @@ const bulkCreate = async (req, res, next) => {
     });
 
     res.status(201).json({
-      message: "success!",
+      // message: "success!",
+      message: "Bulk task creation successful",
       tasksCreated: result.count,
       totalRequested: validTasks.length,
     });
@@ -79,17 +80,7 @@ const create = async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
-}; /*
-  const result = await pool.query(
-    `INSERT INTO tasks (title, is_completed, user_id) 
-  VALUES ( $1, $2, $3 ) RETURNING id, title, is_completed`,
-    //AI review recommended adding ?? false in case JOI doesn't provide a value to act as a default
-    [value.title, value.is_completed ?? false, global.user_id],
-  );
-
-  const newTask = result.rows[0]; // we do this because we can only add one task at a time
-  res.status(StatusCodes.CREATED).json(newTask);
-};*/
+}; 
 //index GET /api/tasks
 const index = async (req, res, next) => {
   const { error, value } = taskPaginationSchema.validate(req.query, {
@@ -181,6 +172,7 @@ const show = async (req, res, next) => {
         title: true,
         isCompleted: true,
         priority: true,
+        createdAt: true,
         User: {
           select: {
             name: true,
