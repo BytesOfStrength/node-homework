@@ -2,8 +2,24 @@ const express = require("express");
 require("dotenv").config();
 const prisma = require("./db/prisma");
 const app = express();
+//L8- Add cookieParser to extract cookies for authentication for signed JWT session tokens
+const cookieParser = require("cookie-parser");
+//L8 trust proxy is used to tell Express framework to trust secure connection. Ensures backend can accept and transmit secure, HttpOnly sesson cookies properly once app is deployed
+
+app.set("trust proxy", 1);
+const helmet = require("helmet"); //defense response headers (Content Security Policy)
+const { xss } = require("express-xss-sanitizer"); //remove malicious scripts
+const rateLimiter = require("express-rate-limit"); //defend against dOS and brute-force
+
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  }),
+);
+app.use(helmet());
+app.use(cookieParser());
 app.use(express.json({ limit: "1kb" }));
-global.user_id = null;
 app.use((req, res, next) => {
   console.log(
     `Request Method: ${req.method}, Request Path: ${req.path}, Request Query:`,
@@ -11,8 +27,10 @@ app.use((req, res, next) => {
   );
   next();
 });
+app.use(xss());
+
 const userRouter = require("./routes/userRoutes");
-const authMiddleware = require("./middleware/auth");
+const jwtMiddleware = require("./middleware/jwtMiddleware.js");
 const taskRouter = require("./routes/taskRoutes");
 const analyticsRouter = require("./routes/analyticsRoutes");
 
@@ -32,13 +50,10 @@ app.get("/health", async (req, res) => {
   }
 });
 
-/*app.post("/testpost", (req, res) => {
-  res.status(200).send("POST request received!");
-});*/
-
 app.use("/api/users", userRouter);
-app.use("/api/tasks", authMiddleware, taskRouter);
-app.use("/api/analytics", authMiddleware, analyticsRouter);
+//L8 replace authMiddleware with jwtMiddleware
+app.use("/api/tasks", jwtMiddleware, taskRouter);
+app.use("/api/analytics", jwtMiddleware, analyticsRouter);
 
 const notFound = require("./middleware/not-found.js");
 app.use(notFound);

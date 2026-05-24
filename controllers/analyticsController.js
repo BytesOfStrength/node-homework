@@ -17,6 +17,11 @@ const getUserAnalytics = async (req, res, next) => {
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: "That user ID is invalid." });
     }
+    if (userId !== req.user.id) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ message: "Access Denied: user can only view own analytics." });
+    }
     //validation for if the user already exists 404 check required as per Lesson7
     const existingUserId = await prisma.user.findUnique({
       where: { id: userId },
@@ -98,29 +103,7 @@ const getUsersWithStats = async (req, res, next) => {
   try {
     const page = parseInt(value.page) || 1;
     const limit = parseInt(value.limit) || 10;
-
-    /*validation for pagination 
-    if (page < 1) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        error: "Pagination Error",
-        message: "Page must be 1 or greater."
-      });
-    }if (limit< 1 || limit > 100){
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        error: "Pagination Error",
-        message: " Limit needs to be between 1 and 100."
-      });
-    }*/
     const skip = (page - 1) * limit;
-    //const whereClause = { userId: global.user_id };
-
-    /*if (req.query.find) {
-      whereClause.id = {
-        contains: req.query.find, // Matches %find% pattern
-        mode: "insensitive", // Case-insensitive search (ILIKE in PostgreSQL)
-      };
-    }*/
-
     //Filtering  and sorting inside include : For video submission
     const usersRaw = await prisma.user.findMany({
       include: {
@@ -187,7 +170,7 @@ const searchTasks = async (req, res, next) => {
     //Get Search term for q
     const searchQuery = value.q;
     //validate search query to check due to lesson requirements although Joi schema also created
-     if (!searchQuery || searchQuery.trim().length < 2) {
+    if (!searchQuery || searchQuery.trim().length < 2) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         error: "Search query must be at least 2 characters long",
       });
@@ -195,12 +178,6 @@ const searchTasks = async (req, res, next) => {
     const limit = parseInt(value.limit) || 20;
 
     //Lesson7: Limit validation on searches
-    /*if (limit < 1 || limit > 100) {
-     return res.status(StatusCodes.BAD_REQUEST).json({
-       error: "Pagination Error",
-       message: " Limit needs to be between 1 and 100.",
-     });
-   }*/
     // Construct search patterns outside the query for proper parameterization
     const searchPattern = `%${searchQuery}%`;
     const exactMatch = searchQuery;
@@ -218,8 +195,10 @@ const searchTasks = async (req, res, next) => {
     u.name as "user_name"
   FROM tasks t
   JOIN users u ON t.user_id = u.id
-  WHERE t.title ILIKE ${searchPattern} 
-     OR u.name ILIKE ${searchPattern}
+  WHERE (t.title ILIKE ${searchPattern} 
+     OR u.name ILIKE ${searchPattern})
+     AND t.user_id = ${req.user.id}    
+    
   ORDER BY 
     CASE 
       WHEN t.title ILIKE ${exactMatch} THEN 1
