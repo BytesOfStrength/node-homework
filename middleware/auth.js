@@ -1,4 +1,4 @@
-const { StatusCodes } = require("http-status-codes");
+/*const { StatusCodes } = require("http-status-codes");
 
 const auth = (req, res, next) => {
   console.log("Auth middleware: Current global.user_id is", global.user_id);
@@ -11,3 +11,4 @@ const auth = (req, res, next) => {
   next();
 };
 module.exports = auth;
+*/

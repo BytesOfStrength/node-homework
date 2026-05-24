@@ -1,9 +1,11 @@
 const { StatusCodes } = require("http-status-codes");
 const { userSchema } = require("../validation/userSchema");
 const prisma = require("../db/prisma");
-//const pool = require("../db/pg-pool");
 const crypto = require("crypto");
 const util = require("util");
+//L8
+const { randomUUID } = require("crypto");
+const jwt = require("jsonwebtoken");
 const scrypt = util.promisify(crypto.scrypt);
 //Hashing functions
 async function hashPassword(password) {
@@ -18,6 +20,23 @@ async function comparePassword(inputPassword, storedHash) {
   const derivedKey = await scrypt(inputPassword, salt, 64);
   return crypto.timingSafeEqual(keyBuffer, derivedKey);
 }
+//L8
+const cookieFlags = (req) => {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // only when HTTPS is available
+    sameSite: "Strict",
+  };
+};
+
+const setJwtCookie = (req, res, user) => {
+  // Sign JWT
+  const payload = { id: user.id, csrfToken: randomUUID() };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" }); // 1 hour expiration
+  // Set cookie.  Note that the cookie flags have to be different in production and in test.
+  res.cookie("jwt", token, { ...cookieFlags(req), maxAge: 3600000 }); // 1 hour expiration
+  return payload.csrfToken; // this is needed in the body returned by logon() or register()
+};
 
 //function register which pushes the name of the newUser information onto the array newUser
 const register = async (req, res, next) => {
@@ -40,7 +59,6 @@ const register = async (req, res, next) => {
         select: { name: true, email: true, id: true, createdAt: true },
       });
       //Lesson 7 simulate Rollback Temp code for assignment: for task failure
-      //throw new Error("Simulated Welcome Task Failure");
 
       const welcomeTasksData = [
         {
@@ -71,18 +89,20 @@ const register = async (req, res, next) => {
       });
       return { user: newUser, welcomeTasks };
     });
-    // 6. Success! (The 'user' variable is accessible here because of 'let user = null')
-    global.user_id = result.user.id;
+
+    //L8: insert const csrfToken
+
+    const csrfToken = setJwtCookie(req, res, result.user);
+
     res.status(StatusCodes.CREATED).json({
+      name: result.user.name,
+      email: result.user.email,
+      csrfToken: csrfToken,
       user: result.user,
       welcomeTasks: result.welcomeTasks,
       transactionStatus: "success",
-      /*name: user.name,
-      email: user.email,*/
     });
   } catch (err) {
-    // 5. Handle the Prisma-specific error code for "Unique constraint"
-    //if (err.name === "PrismaClientKnownRequestError" && err.if code === "P2002") {
     if (err.code === "P2002") {
       return res
         .status(StatusCodes.BAD_REQUEST)
@@ -92,17 +112,6 @@ const register = async (req, res, next) => {
     return next(err);
   }
 };
-//L7 I removed pool query here from lesson5
-/*in Lesson 5b we remove using a loop function to find if the user is existing 
-  //4. For validate section use value to create the user replace req.body with value
-
-  //const newUser = { ...value }; // this makes a copy
-  const newUser = {
-    name: value.name,
-    email: value.email,
-    password: hashedPassword, //store hashed pwd not plain text pwd
-  };
- */
 
 const logon = async (req, res, next) => {
   const { email, password } = req.body;
@@ -114,13 +123,15 @@ const logon = async (req, res, next) => {
     if (!user) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
-        .json({ message: "Authentication Failed" });
+        .json({ message: "Authentication Failed." });
     }
     const isMatched = await comparePassword(password, user.hashedPassword);
 
     if (isMatched) {
-      global.user_id = user.id;
-      res.status(StatusCodes.OK).json({ name: user.name, email: user.email });
+      const csrfToken = setJwtCookie(req, res, user);
+      res
+        .status(StatusCodes.OK)
+        .json({ name: user.name, email: user.email, csrfToken: csrfToken });
     } else {
       res
         .status(StatusCodes.UNAUTHORIZED)
@@ -131,8 +142,10 @@ const logon = async (req, res, next) => {
   }
 };
 
-const logoff = (req, res) => {
-  global.user_id = null;
-  res.sendStatus(StatusCodes.OK);
+//L8 clear cookies from most active session after user logs out so user's cookies cannot be used inappropriately
+
+const logoff = async (req, res) => {
+  res.clearCookie("jwt", cookieFlags(req));
+  res.status(StatusCodes.OK).json({ message: "Logged out successfully" });
 };
 module.exports = { register, logon, logoff };
