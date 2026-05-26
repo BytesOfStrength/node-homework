@@ -31,7 +31,8 @@ const bulkCreate = async (req, res, next) => {
       title: value.title,
       isCompleted: value.isCompleted || false,
       priority: value.priority || "medium",
-      userId: global.user_id,
+      //L8 remove global user_id
+      userId: req.user.id,
     });
   }
 
@@ -43,7 +44,6 @@ const bulkCreate = async (req, res, next) => {
     });
 
     res.status(201).json({
-      // message: "success!",
       message: "Bulk task creation successful",
       tasksCreated: result.count,
       totalRequested: validTasks.length,
@@ -65,7 +65,8 @@ const create = async (req, res, next) => {
       data: {
         title: value.title,
         isCompleted: value.isCompleted ?? false,
-        userId: global.user_id,
+        //L8 remove global user_id
+        userId: req.user.id,
         priority: value.priority ?? "medium",
       },
       //which columns to return which is the body of the response and make sure just like lesson 5 userId is not sent back in the response
@@ -80,7 +81,7 @@ const create = async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
-}; 
+};
 //index GET /api/tasks
 const index = async (req, res, next) => {
   const { error, value } = taskPaginationSchema.validate(req.query, {
@@ -96,7 +97,8 @@ const index = async (req, res, next) => {
     const page = parseInt(value.page) || 1;
     const limit = parseInt(value.limit) || 10;
     const skip = (page - 1) * limit;
-    const whereClause = { userId: global.user_id };
+    //L8 remove global.user_id
+    const whereClause = { userId: req.user.id };
 
     if (value.find) {
       whereClause.title = {
@@ -126,15 +128,7 @@ const index = async (req, res, next) => {
     // Get total count for pagination metadata
     const totalTasks = await prisma.task.count({
       where: whereClause,
-      //where: { userId: global.user_id },
     });
-
-    /*if (tasks.length === 0) {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "No tasks found" });
-    }
-        */
     const pagination = {
       page,
       limit,
@@ -165,7 +159,8 @@ const show = async (req, res, next) => {
   try {
     const task = await prisma.task.findUniqueOrThrow({
       where: {
-        id_userId: { id: taskToFind, userId: global.user_id },
+        //L8 remove global.user_id
+        id_userId: { id: taskToFind, userId: req.user.id },
       },
       select: {
         id: true,
@@ -189,38 +184,6 @@ const show = async (req, res, next) => {
         .json({ message: "Task was not found" });
     }
     return next(err);
-    /*const task = await prisma.task.findUnique({
-      where: {
-        id_userId: { id: taskToFind, userId: global.user_id },
-      },
-      select: {
-        id: true,
-        title: true,
-        isCompleted: true,
-        priority: true,
-        User: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
-     (!task) {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "Task was not found" });
-    }
-    res.status(StatusCodes.OK).json(task);
-  } catch (err) {
-    if (err.code === "P2025") {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ message: "Task was not found" });
-    }
-    //pass other unexpected errors to global error handler
-    return next(err);
-  }*/
   }
 };
 //need update
@@ -247,7 +210,8 @@ const update = async (req, res, next) => {
       where: {
         id_userId: {
           id: taskToFind,
-          userId: global.user_id,
+          //L8 remove global.user_id
+          userId: req.user.id,
         },
       },
       select: { title: true, isCompleted: true, id: true, priority: true },
@@ -267,7 +231,7 @@ const update = async (req, res, next) => {
 const deleteTask = async (req, res, next) => {
   const taskToFind = parseInt(req.params?.id); //if there are no params, the ? makes sure that you get a null
 
-  if (!taskToFind) {
+  if (isNaN(taskToFind)) {
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "The task ID passed is not valid." });
@@ -277,7 +241,8 @@ const deleteTask = async (req, res, next) => {
       where: {
         id_userId: {
           id: taskToFind,
-          userId: global.user_id,
+          //L8 remove global.user_id
+          userId: req.user.id,
         },
       },
       select: { title: true, isCompleted: true, id: true, priority: true },
@@ -289,7 +254,7 @@ const deleteTask = async (req, res, next) => {
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "The task was not found." });
     } else {
-      return next(err); // pass other errors to the global error handler
+      return next(err);
     }
   }
 };

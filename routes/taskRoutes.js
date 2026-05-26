@@ -1,5 +1,6 @@
 const express = require("express");
-const auth = require("../middleware/auth");
+//L8 replace jwtMiddleware for auth.js
+const jwt = require("../middleware/jwtMiddleware.js");
 const router = express.Router();
 
 const {
@@ -11,7 +12,7 @@ const {
   deleteTask,
 } = require("../controllers/taskController");
 
-router.use(auth);
+//router.use(jwt); I commented this out because app.js will use the jwtMiddleware on taskRoutes
 // post/api/tasks
 //GET / - List tasks with pagination, eager loading, and search filter
 //POST /  - Create single task
