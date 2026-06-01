@@ -11,7 +11,6 @@ describe("user object validation tests", () => {
     );
     console.log("Joi Validation Error Response:", error);
     expect(
-      /*this is a validation setup that JoiValidation uses with .find to find the first value that returns true . This test will report a failure in two cases.  First, the error might be returned, but without a detail.context with a key of password.  In this case, the matcher flags a test failure.  The second failure case is that the validation call found no problems with the object, and returned a value instead of an error.  In this case, the reference to error.details throws an error, because error would be null.  In either case, no further statements within the it() block run, and we get the result we need: a test failure is reported.  If there are other it() blocks within the describe() or elsewhere in the file, they'll still run in either case.*/
       error.details.find((detail) => detail.context.key == "password"),
     ).toBeDefined();
   });
@@ -125,7 +124,7 @@ describe("task object validation tests", () => {
       { title: "task1", isCompleted: true },
       { abortEarly: false },
     );
-    console.log("Joi validation error response 11:", value);
+    console.log("Joi validation response 11:", value);
     expect(value.isCompleted).toBe(true);
   }); //closes the it() block
 }); //closes the describe block
@@ -148,7 +147,7 @@ describe("patchSchema validation tests", () => {
       { priority: "medium" },
       { abortEarly: false },
     );
-    console.log("Joi validation error response 13:", value);
+    console.log("Joi validation response 13:", value);
     //error should not occur so we expect it to be false in errors even if title is missing
     expect(value.isCompleted).toBeUndefined();
   }); //end of it block
