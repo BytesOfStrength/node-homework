@@ -180,3 +180,68 @@ describe("test getting created tasks", () => {
     expect(saveRes.statusCode).toBe(404); //Alice is blocked from Bob's specific task
   });
 }); //closes the describe block
+describe("test updating and deleting tasks as well as write-access control", () => {
+  //28. User1 can set the task corresponding to saveTaskId to isCompleted: true
+  it("28. User1 can set the task corresponding to saveTaskId to isCompleted: true", async () => {
+    const req = httpMocks.createRequest({
+      method: "PATCH",
+      body: { isCompleted: true },
+    });
+    req.user = { id: user1.id }; //Bob is logged in
+    req.params = { id: saveTaskId.toString() };
+    saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+    await waitForRouteHandlerCompletion(update, req, saveRes);
+    expect(saveRes.statusCode).toBe(200);
+    const updateData = saveRes._getJSONData(); // reusing saveRes
+    expect(updateData.isCompleted).toBe(true);
+  });
+  //29 User2 can't update task corresponding to user1's savetaskId to isCompleted: true
+  it("29.User2 can't update task corresponding to user1's savetaskId to isCompleted: true", async () => {
+    const req = httpMocks.createRequest({
+      method: "PATCH",
+      body: { isCompleted: true },
+    });
+    req.user = { id: user2.id }; //Alice is logged in
+    req.params = { id: saveTaskId.toString() };
+    saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+    await waitForRouteHandlerCompletion(update, req, saveRes);
+    expect(saveRes.statusCode).toBe(404);
+  }); //closes it block
+  //30 User2 can't delete this task.
+  it("30. User2 can't delete user1's task", async () => {
+    const req = httpMocks.createRequest({
+      method: "DELETE",
+    });
+    req.user = { id: user2.id }; //Alice is logged in
+    req.params = { id: saveTaskId.toString() };
+    saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+    await waitForRouteHandlerCompletion(deleteTask, req, saveRes);
+    expect(saveRes.statusCode).toBe(404);
+    //const updateData = saveRes._getJSONData(); // reusing saveRes
+  }); //closes it block
+  //31. User1 can delete this task.
+  it("31. User1 can delete this task which is User1's", async () => {
+    const req = httpMocks.createRequest({
+      method: "DELETE",
+    });
+    req.user = { id: user1.id }; //Alice is logged in
+    req.params = { id: saveTaskId.toString() };
+    saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+    await waitForRouteHandlerCompletion(deleteTask, req, saveRes);
+    expect(saveRes.statusCode).toBe(200);
+    //const updateData = saveRes._getJSONData(); // reusing saveRes
+  }); //closes it block
+
+  //32. Retrieving user1's tasks now returns a 404. This is because User1 deleted his only task
+  it("32. Retrieving user1's tasks now returns a 404", async () => {
+    const req = httpMocks.createRequest({
+      method: "GET",
+    });
+    req.user = { id: user1.id }; //Alice is logged in
+    req.params = { id: saveTaskId.toString() };
+    saveRes = httpMocks.createResponse({ eventEmitter: EventEmitter });
+    await waitForRouteHandlerCompletion(index, req, saveRes);
+    expect(saveRes.statusCode).toBe(404);
+    //const updateData = saveRes._getJSONData(); // reusing saveRes
+  }); //close it block
+}); //closes describe block
