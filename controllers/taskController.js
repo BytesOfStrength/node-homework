@@ -137,7 +137,12 @@ const index = async (req, res, next) => {
       hasNext: page * limit < totalTasks,
       hasPrev: page > 1,
     };
-
+    //L9 had to uncomment tasks.length === 0 to get status 400 for assignment9 testing
+    if (tasks.length === 0) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "No tasks found" });
+    }
     // Return tasks with pagination information
     res.status(200).json({
       tasks,
