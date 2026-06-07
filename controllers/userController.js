@@ -41,7 +41,7 @@ const setJwtCookie = (req, res, user) => {
 //function register which pushes the name of the newUser information onto the array newUser
 const register = async (req, res, next) => {
   if (!req.body) req.body = {};
-//L10 after you confirm request body isn't empty, then check recaptcha if it's a bot 
+  //L10 after you confirm request body isn't empty, then check recaptcha if it's a bot
   let isPerson = false;
   if (req.body.recaptchaToken) {
     const token = req.body.recaptchaToken;
@@ -71,11 +71,9 @@ const register = async (req, res, next) => {
     isPerson = true;
   }
   if (!isPerson) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({
-        message: "Bot verification failed. Please complete the reCAPTCHA.",
-      });
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "Bot verification failed. Please complete the reCAPTCHA.",
+    });
   }
   const { error, value } = userSchema.validate(req.body, { abortEarly: false });
   if (error) {
