@@ -1,2 +1,2 @@
 #urlBase used for deployed application on Render.com
-{{urlBase}} = https://node-homework-1yhc.onrender.com
+https://node-homework-1yhc.onrender.com
