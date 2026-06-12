@@ -10,7 +10,6 @@ const prisma = require("../db/prisma");
 //POST / api / tasks / bulk;
 const bulkCreate = async (req, res, next) => {
   const { tasks } = req.body;
-
   //Validate the tasks array
   if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
     return res.status(StatusCodes.BAD_REQUEST).json({
@@ -263,4 +262,44 @@ const deleteTask = async (req, res, next) => {
     }
   }
 };
-module.exports = { bulkCreate, create, index, show, update, deleteTask };
+//POST / api / tasks / bulk-delete;
+//const taskIds =[];
+const bulkDeleteTasks = async (req, res, next) => {
+  const { ids } = req.body;
+  //Validate the tasks array
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of task IDs.",
+    });
+  }
+  // Use deleteMany for batch deletion and ensure if a string is entered, convert to int
+  try {
+    const numIds = ids.map((id) => parseInt(id, 10));
+    const result = await prisma.task.deleteMany({
+      where: {
+        id: {
+          in: numIds,
+        },
+        userId: req.user.id,
+      },
+    });
+
+    res.status(200).json({
+      //message: "success!",
+      message: "Bulk task deletion successful",
+      tasksDeleted: result.count,
+      totalRequested: ids.length,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+module.exports = {
+  bulkCreate,
+  create,
+  index,
+  show,
+  update,
+  deleteTask,
+  bulkDeleteTasks,
+};
