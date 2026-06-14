@@ -1,2 +1,58 @@
 #urlBase used for deployed application on Render.com
 https://node-homework-1yhc.onrender.com
+
+Extra Functionality Added: bulk operations (update and delete)
+
+I implemented two advanced bulk endpoints to enable users to modify or remove collections of tasks at the same time using efficient database batch operations (Prisma's updateMany and deleteMany). Both endpoints feature strict user isolation, forcing `userId: req.user.id`, to ensure users can only update or delete their own records. 
+
+How to test the endpoints : 
+1. Feature: Bulk Task Update
+  * Path: /api/tasks/bulk-update
+  * Method: PATCH
+  * Query Parameters: 
+     * isCompleted (boolean string): determines which group of tasks to target. 
+       Use `?isCompleted=false` to target incomplete tasks, or 
+       use `?isCompleted=true` to target completed tasks.
+  * Request Body (JSON raw). Since I want to target incomplete tasks and change them to completed tasks, I would provide the property that I want to update. In this example, I would type the following in the request Body: 
+    {
+      "isCompleted": true
+    }
+
+  How to test via Postman: 
+    1. Authenticate with API first to establish session by logging in with a user that is already registered.
+    2. Set the HTTP request method to PATCH.
+    3.Save in the environment for Postman (key:value) urlBase: value will equal the url from your render.com webservice; otherwise you can use {{host}} instead and set the url to be the local host port of your Backend application which is again saved in your environment for Postman.
+
+    For example in this application  urlBase : https://node-homework-1yhc.onrender.com
+    
+     Use URL: {{urlBase}}/api/tasks/bulk-update?isCompleted=false
+    4.Make sure to have your active 'X-CSRF-Token' added to request headers 
+    5. In Body tab, select 'raw' and 'JSON', then pass:
+    {
+      "isCompleted": true
+    }
+    6.Click Send. API should process batch operation and return a 200 OK along with 'tasksUpdated' count.
+
+2. Feature: Bulk Task Deletion
+  * Path: /api/tasks/bulk-delete
+  * Method:DELETE
+  * Query Parameters: 
+     none
+  * Request Body (JSON raw): 
+    {
+      "ids": [1, 2, 3]
+    }
+  How to test via Postman: 
+    1. Authenticate with API first to establish session by logging in with a user that is already registered.
+    2. Set the HTTP request method to DELETE.
+    3.Save in the environment for Postman (key:value) urlBase: value will equal the url from your render.com webservice; otherwise, you can use {{host}} instead and set the url to be the local host port of your Backend application which is again saved in your environment for Postman.
+
+    For example in this application  urlBase : https://node-homework-1yhc.onrender.com
+    
+     Use URL: {{urlBase}}/api/tasks/bulk-delete
+    4.Make sure to have your active 'X-CSRF-Token' added to request headers 
+    5. In Body tab, select 'raw' and 'JSON', then pass an array of target IDs that you want to remove:
+    {
+      "ids":[1 , 2 , 3]
+    }
+    6.Click Send. API processes the batch, sanitizes string ids into integers, executes deletion, and returns a 200 OK along with 'tasksDeleted' count.
