@@ -1,10 +1,10 @@
 # Task Management Backend API
 
-A secure, production ready Task Management backend REST API built with JavaScript (Node.js), Express framework, and Prisma ORM. This application is connected to a live relational database via Neon PostgreSQL and is optimized to run both by as a standalone web service hosted on Render.com and as a database backend engine supporting a React Frontend interface.
+A secure, production ready Task Management backend REST API built with JavaScript (Node.js), Express framework, and Prisma ORM. This application is connected to a live relational database via Neon PostgreSQL and is optimized to run both as a standalone web service hosted on Render.com and as a database backend engine supporting a React Frontend interface.
 
 ## Project Overview and Purpose
 
-This repository contains the complete final project for Code the Dreams’s Node/Express course adapted from the foundational homework repository provided by the course into production-ready backend architecture based repository.
+This repository contains the complete final project for Code the Dream’s Node/Express course adapted from the foundational homework repository provided by the course into production-ready backend architecture based repository.
 
 The application’s main objective is to maintain strict user security in order that only authenticated users have access control and authorization to mutate tasks their specific tasks. This security is accomplished with stateful cookie-based sessions, parse and sanitize data and user information via JOI schema-based validation, and automated token checks. This backend code also manages batch database operations via Prisma’s built-in `createMany`, `deleteMany`, and `updateMany` hooks to execute operations in a single transaction instead of relying on inefficient client-side loops of individual changes.
 
@@ -17,16 +17,16 @@ The application’s main objective is to maintain strict user security in order 
 - **Authentication and Session Identity:** Protected user registration using RECAPTCHA bot bypass validation keys, password encryption, and stateful session management utilizing JWTs stored over `HTTPOnly` cookies.
 - **Automated CSRF Defense:** Integrated custom CSRF middleware requiring synchronous verification of double-submitted tokens passed in the request header (`X-CSRF-Token`) across all mutative requests which include POST, PATCH, and DELETE.
 - **Optimized Bulk Operations:**
-  * Use `POST /api/tasks/bulk` to create multiple tasks in a single transaction
-  * Use `PATCH /api/tasks/bulk-update` to modify multiple tasks based on a parameter query filter of completion status
-  * Use `DELETE /api/tasks/bulk-delete` to remove multiple tasks based on an array of target IDs.
+  - Use `POST /api/tasks/bulk` to create multiple tasks in a single transaction
+  - Use `PATCH /api/tasks/bulk-update` to modify multiple tasks based on a parameter query filter of completion status
+  - Use `DELETE /api/tasks/bulk-delete` to remove multiple tasks based on an array of target IDs.
 - **Advanced Task Filtering and Controls:** Case insensitive searches, pagination server side lists, dynamic filtering by status `?isCompleted=false`, and eager-loading table joins to attach owner relationships cleanly
 
 ---
 
 ## Security Framework and Risk Mitigation
 
-    Backend implements defenses against data misuse and automated bot attacks
+Backend implements defenses against data misuse and automated bot attacks
 
 - **Payload Size Expansion**: The baseline Express JSON parser configuration has been scaled to increase the amount of payload in `app.js` (`app.use(express.json({ limit: "1mb" }));` ) to fully accommodate large multi-character Google reCAPTCHA payloads without dropping request validation
 - **Bot defenses**: When a new user registers, the backend sends the reCaptcha token to Google to verify the user is a real human before saving them to the database
@@ -54,140 +54,151 @@ The application’s main objective is to maintain strict user security in order 
 
 ### Local PostgreSQL Configuration
 
-        The steps needed to install and configure this package are a little different depending on the platform. Include are steps for PostgreSQL on Mac. For more  detailed information refer to the original repository guidance from the node-homework repository by Code the Dream school. https://github.com/Code-the-Dream-School/node-homework
+The steps needed to install and configure this package are a little different depending on the platform. Include are steps for PostgreSQL on Mac. For more detailed information refer to the original repository guidance from the node-homework repository by Code the Dream school. https://github.com/Code-the-Dream-School/node-homework
 
-        <details>
-        <summary style="font-size: 1.1em; cursor: pointer; font-weight: bold;">Click to expand: PostgreSQL on Mac</summary>
+<details>
+<summary style="font-size: 1.1em; cursor: pointer; font-weight: bold;">Click to expand: PostgreSQL on Mac</summary>
 
-        Enter the following commands in a terminal session. The `<username>` you use is your Mac username, that is, the value returned by the whoami command.
+Enter the following commands in a terminal session. The `<username>` you use is your Mac username, that is, the value returned by the whoami command.
 
-            ```bash
-            brew update
-            brew install postgresql@14
-            brew services start postgresql@14
-            psql -U postgres
-            CREATE ROLE <username> LOGIN CREATEDB;
-            CREATE DATABASE nodehomework OWNER <username>;
-            CREATE DATABASE tasklist OWNER <username>;
-            CREATE DATABASE testtasklist OWNER <username>;
-            \q
-            ```
+```bash
+brew update
+brew install postgresql@14
+brew services start postgresql@14
+psql -U postgres
+CREATE ROLE <username> LOGIN CREATEDB;
+CREATE DATABASE nodehomework OWNER <username>;
+CREATE DATABASE tasklist OWNER <username>;
+CREATE DATABASE testtasklist OWNER <username>;
+ \q
+```
 
-            **Verify PostgreSQL installation:**
+**Verify PostgreSQL installation:**
 
-            ```bash
-            psql --version
-            ```
+```bash
+psql --version
+```
 
-            You should see a version number like `psql (PostgreSQL) 14.x`.
+You should see a version number like `psql (PostgreSQL) 14.x`.
 
+</details>
 
 ### Local Installation Steps
 
 To run and configure this backend application on your computer do the following steps:
 
-1. **Clone the Repository**
-   Use the command below to download a local copy using Bash:
-   Use copy and paste under https: on code (green button) on github
+1.  **Clone the Repository**
+    Use the command below to download a local copy using Bash:
+    Use copy and paste under https: on code (green button) on github
 
-        ```bash
+```bash
 
-        git clone https://github.com/BytesOfStrength/node–homework.git
-        cd node-homework
-        ```
+git clone git@github.com:BytesOfStrength/node-homework.git
+cd node-homework
+```
 
-2. **Install dependencies**
-   Use this command to install framework components, security tools, and library assets
+2.  **Install dependencies**
+    Use this command to install framework components, security tools, and library assets
 
-        ```bash
+```bash
 
-        npm install
-        ```
+npm install
+```
 
 3. **Environment Configuration File for local setup and local testing:**
    Create a `.env` file in the root of the `node-homework` folder. The format of this file depends on your operating system.
 
-    <details>
-    <summary>The .env file for the Mac</summary>
+<details>
+<summary>The .env file for the Mac</summary>
 
-        ```
-        DB_URL=postgresql://<username>@localhost/nodehomework?host=/tmp
-        DATABASE_URL=postgresql://<username>@localhost/tasklist?host=/tmp
-        TEST_DATABASE_URL=postgresql://<username>@localhost/testtasklist?host=/tmp
-        JWT_SECRET="local_development_secret_signature_string"
-        RECAPTCHA_BYPASS="local_development_bypass_phrase"
-        ```
+```
+DB_URL=postgresql://<username>@localhost/nodehomework?host=/tmp
+DATABASE_URL=postgresql://<username>@localhost/tasklist?host=/tmp
+TEST_DATABASE_URL=postgresql://<username>@localhost/testtasklist?host=/tmp
+JWT_SECRET="local_development_secret_signature_string"
+RECAPTCHA_BYPASS="local_development_bypass_phrase"
+```
 
-    </details>
+</details>
 
 ## Validating Your `node-homework` Configuration locally
 
-    1. From your `node-homework` folder, run the following:
+1. From your `node-homework` folder, run the following:
 
-        ```bash
-        node load-db
-        ```
+```bash
+node load-db
+```
 
 You should see messages that tables have been loaded.
+
 ## Generate the Prisma Engine Client
 
-    1. To build custom JavaScript code engine to run prisma commands, run this terminal command:
+1. To build custom JavaScript code engine to run prisma commands, run this terminal command:
 
-        ```bash
-        npx prisma generate
-        ```
+```bash
+npx prisma generate
+```
+
 ## Launch Prisma Studio (optional)
-    1. To verify database schemas, inspect data tables or browse rows through a visual dashboard instead of writing raw SQL commands, boot up Prisma’s interface engine locally:
 
-        ```bash
-        npx prisma studio
-        ```
+1. To verify database schemas, inspect data tables or browse rows through a visual dashboard instead of writing raw SQL commands, execute Prisma’s interface engine locally:
+
+```bash
+npx prisma studio
+```
 
 ## Execution Command to ensure local tests pass automated local testing suites
-    1. Run the local automated integration test pipeline to verify code path handling:
 
-        ```bash
-        npm run test
-        ```
-        * Note on Test Suite Results: Because this production-ready backend enforces strict JOI schema validation and automated reCAPTCHA bot defense across all user registration endpoints, certain baseline curriculum test designed around unverified inputs will fail by default during a standard local execution. 
-        These intentional failures occur because the original testing suite does not pass the custom `X-Recaptcha-Test` header parameters required to cleanly bypass the live bot-handshake validation layers. This behavior confirms that the security guardrails are successfully blocking unverified automated registrations as designed.
+1. Run the local automated integration test pipeline to verify code path handling:
+
+```bash
+npm run test
+```
+
+- Note on Test Suite Results: Because this production-ready backend enforces strict JOI schema validation and automated reCAPTCHA bot defense across all user registration endpoints, certain baseline curriculum test designed around unverified inputs will fail by default during a standard local execution.
+  These intentional failures occur because the original testing suite does not pass the custom `X-Recaptcha-Test` header parameters required to cleanly bypass the live bot-handshake validation layers. This behavior confirms that the security guardrails are successfully blocking unverified automated registrations as designed.
 
 ## Start Local Application Express server
-        ```bash
-        npm run dev
-        ```
-    The local API server will start and run on machine at `http://localhost:3000`
+
+```bash
+npm run dev
+```
+
+The local API server will start and run on machine at `http://localhost:3000`
 
 ---
-### Cloud database Infrastructure
-To sync live Neon database structure definitions with your Prisma Migrations:
-Run this terminal command:
 
-```bash 
-npx prisma migrate deploy 
+### Cloud database Infrastructure to connect Back End to a Cloud Resident Postgres Database
+
+1. Create or log into your account on Neon.tech
+2. Create a new project called node-homework. This creates a Postgres database on Neon. A connection string (a URL) will be shown. Copy the connection string
+3. Edit the `.env  ` file in your node-homework directory. Update the DATABASE_URL so `DATABASE_URL= connection string value from the Neon.tech project you just made for node-homework.` Be careful with the connection string! It contains a password. Because you are putting it in the .env file, it won't be stored in Github.
+4. Stop the back end app in node-homework if it is running.
+5. In the terminal session, do the following command:
+
+```bash
+npx prisma migrate deploy
 ```
+
+This command creates the tables your app needs in the Neon database, according to the schema in your Prisma schema file.
 
 ### Environment Configuration File For Production and Deployment
 
+If transitioning local context to deployment configurations using cloud based infrastructures (like Neon.tech and Render.com), the `.env` settings must match the values for the production cloud credential variables below:
+There is a created `.env.local.example` in the node-homework repository for reference:
 
-   If transitioning local context to deployment configurations using cloud based infrastructures (like Neon.tech and Render.com), the `.env` settings must match the values for the production cloud credential variables below: 
-   There is a created `.env.local.example` in the node-homework repository for reference:
+- Cloud based database connection string that you are assigned when you get neon.tech account
+  - DATABASE_URL= "postgresql://<db_user>:<db_password>@<neon_host_string>.neon.tech/<db_name>?sslmode=require"
 
-   ```env
-   - #Cloud based database connection string that you are assigned when you get neon.tech account
-     - DATABASE_URL= "postgresql://<db_user>:<db_password>@<neon_host_string>.neon.tech/<db_name>?sslmode=require"
+- Stateful security token string for digital signatures
+  - JWT_SECRET=your_random_chosen_alphanumeric_string_digital_signature
 
-   - #Stateful security token string for digital signatures
-     - JWT_SECRET=your_random_chosen_alphanumeric_string_digital_signature
+- Security and Bot-Bypass strings:
+  - RECAPTCHA_SECRET="your_production_recaptcha_secret_key_string" (this is the key you get if you personally logon to google and Adding reCAPTCHA Support for your own project)
+  * RECAPTCHA_BYPASS="your_configured_recaptcha_development_bypass_phrase"
 
-   - #Security and Bot-Bypass strings:
-     - RECAPTCHA_SECRET="your_production_recaptcha_secret_key_string" (this is the key you get if you personally logon to google and Adding reCAPTCHA Support for your own project)
-
-     - RECAPTCHA_BYPASS="your_configured_recaptcha_development_bypass_phrase"
-
-   - #GOOGLE_CLIENT_ID given value that matches the value in node-essentials -front-end repository
-     - GOOGLE_CLIENT_ID="174295933149-09i1it2go1ssjpqtqam9vdm1pj257aqu.apps.googleusercontent.com"
-    ```
+* GOOGLE_CLIENT_ID given value that matches the value in node-essentials-front-end repository
+  - GOOGLE_CLIENT_ID="174295933149-09i1it2go1ssjpqtqam9vdm1pj257aqu.apps.googleusercontent.com"
 
 **Note for Developers using reCAPTCHA**:
 By default the registration endpoint has GOOGLE reCAPTCHA bot protection. If you clone this repository, you have two options for local testing:
@@ -205,7 +216,7 @@ By default the registration endpoint has GOOGLE reCAPTCHA bot protection. If you
 
 # RECAPTCHA_SECRET=othergobbledygook
 
-Create a hard to guess secret. Add it to your .env file as RECAPTCHA_BYPASS. This is for testing. Add your secrets directly to your environmental variables. 
+Create a hard to guess secret. Add it to your .env file as RECAPTCHA_BYPASS. This is for testing. Add your secrets directly to your environmental variables.
 
 ## Production Cloud Deployment Configuration using Render.com
 
@@ -216,12 +227,10 @@ Follow these steps:
 2.  Click New+ and select Webservice
 3.  Select `node-homework` repository
 4.  Supply the following settings:
-
-
-    * **Runtime:** Node
-    * **Branch:** main
-    * **Build command:** `npm install --production && npx prisma migrate deploy`
-    * **Start command:** `npm start`
+    - **Runtime:** Node
+    - **Branch:** main
+    - **Build command:** `npm install --production && npx prisma migrate deploy`
+    - **Start command:** `npm start`
 
 5.  Add environment variables matching those in your local `.env` file by clicking `Add .env` button
 
@@ -230,76 +239,69 @@ Follow these steps:
 - **RECAPTCHA_BYPASS**
 - **RECAPTCHA_SECRET**
 
-8. Click **Deploy Web Service**: look for a green live status indicator
-
+6. Click **Deploy Web Service**: look for a green live status indicator
 
 ## Postman Integration and Testing
 
-Every endpoint, request constraint, and database operation can be verified without a user interface by routing requests through Postman . Here we will assume using the render.com to be the cloud server for the backend
+Every endpoint, request constraint, and database operation can be verified without a user interface by routing requests through Postman. Here we will assume using the render.com to be the cloud server for the backend service endpoint.
 
 - Note: make sure Postman global parameters have "enable cookie jar" checked so stateful session cookies persist automatically
+
 ### Step 1. Authentication and Identity verification
-        * **Endpoints**:
-                * Registration: `POST {{urlBase}}/api/users/register`
-                * Logon:`POST {{urlBase}}/api/users/logon`
 
+- **Endpoints**:
+  _ Registration: `POST {{urlBase}}/api/users/register`
+  _ Logon:`POST {{urlBase}}/api/users/logon`
 
-        * Save in Postman environment urlBase with a value of the https://node-homework-1yhc.onrender.com
+- Save in Postman environment `urlBase` with a value of the https://node-homework-1yhc.onrender.com
 
+- **Body format:** `raw (JSON)`
+- **Payload structure:**
+  {
+  "email": "email@example.com",
+  "password": "your_secure_password"
+  }
 
-        * **Body format:** `raw (JSON)`
-        * **Payload structure:**
-        ```json
-          {
-             "email”: “email@example.com",
-             "password”: “your_secure_password"
-          }
-        ```
-        * **System Action**: Successful registration or logon attaches a secure session cookie (visible in Postman under `jwt` identifier) and returns a `csrfToken` in the response payload. Copy this token and save it as `csrfToken` Postman environment variable. It must be included as the `X-CSRF-Token` header in all subsequent task modification requests (POST, PATCH, DELETE) to verify your authorizations and prevent CSRF (cross site request forgery).
+- **System Action**: Successful registration or logon attaches a secure session cookie (visible in Postman under `jwt` identifier) and returns a `csrfToken` in the response body. Copy this token and save it as `csrfToken` Postman environment variable. It must be included as the `X-CSRF-Token` header in all subsequent task modification requests (POST, PATCH, DELETE) to verify your authorizations and prevent CSRF (cross site request forgery).
 
 ### Step 2. (OPTIMIZED ADDITIONAL FUNCTIONALITY ADDED)
 
-        * **Bulk Task Update:**
+- **Bulk Task Update:**
 
-            - Endpoint request method: `PATCH`
-            - For URL : `{{urlBase}}/api/tasks/bulk-update?isCompleted=false`
-            - Query Parameter Logic: ?isCompleted=false (This targets incomplete records only)
-            - Required Headers Configuration:
-                `Content-Type: application/json`
-                `X-CSRF-Token`: copy_the_csrfToken_of_the_authenticated_user or program it automatically by using `{{csrfToken}}` assuming the csrfToken has been updated in the environment of Postman
-                - Body Format: raw(JSON)
-                - **Payload Structure**: { “isCompleted”: true}
-                - **Expected JSON success response (200 OK)**:
-                   { "message”: “Bulk task update successful",
-                     "tasksUpdated": number of tasks updated
-                    }
-        * **Bulk Task Deletions**
-            - Endpoint request method: `DELETE`
-            - For URL : `{{urlBase}}/api/tasks/bulk-delete`
-            - Required Headers Configuration:
-                `Content-Type: application/json`
-                `X-CSRF-Token`: copy_the_csrfToken_of_the_authenicated_user or program it automatically by using `{{csrfToken}}` assuming the csrfToken has been updated in the environment of Postman
-                - Body Format: raw(JSON)
-                - Payload Structure:
-                     {
-                    "ids":[1,2,3]
-                    }
-                - Expected JSON success response (200 OK):
-                    { "message": "Bulk task deletion successful",
-                        "tasksDeleted": number of tasks deleted,
-                        "TotalRequested": number of tasks requested to be deleted
-                    }
+* Endpoint request method: `PATCH`
+* For URL : `{{urlBase}}/api/tasks/bulk-update?isCompleted=false`
+* Query Parameter Logic: ?isCompleted=false (This targets incomplete records only)
+* Required Headers Configuration:
+  `Content-Type: application/json`
+  `X-CSRF-Token`: copy_the_csrfToken_of_the_authenticated_user or program it automatically by using `{{csrfToken}}` assuming the csrfToken has been updated in the environment of Postman
+* Body Format: `raw(JSON)`
+* **Payload Structure**: { "isCompleted": true}
+* **Expected JSON success response (200 OK)**:
+  { "message": "Bulk task update successful",
+  "tasksUpdated": number of tasks updated
+  }
 
-(the application will run with local host at `http://localhost:3000`)
+- **Bulk Task Deletions**
 
-
-
-    
-    
+* Endpoint request method: `DELETE`
+* For URL : `{{urlBase}}/api/tasks/bulk-delete`
+* Required Headers Configuration:
+  `Content-Type: application/json`
+  `X-CSRF-Token`: copy_the_csrfToken_of_the_authenicated_user or program it automatically by using `{{csrfToken}}` assuming the csrfToken has been updated in the environment of Postman
+* Body Format: `raw (JSON)`
+* Payload Structure:
+  {
+  "ids":[1,2,3]
+  }
+* Expected JSON success response (200 OK):
+  { "message": "Bulk task deletion successful",
+  "tasksDeleted": 3,
+  "TotalRequested": 3
+  }
 
 ## Frontend Connection Compatibility
 
-This API layer is designed to support client interactions from the curriculum-provided user interface engine (node-essentials-front-end).
+This API layer is designed to support client interactions from the curriculum-provided user interface engine (`node-essentials-front-end`).
 
 ### Connecting to the React Front end Client Application
 
@@ -319,10 +321,12 @@ npm install
 
 2. Configure Frontend Environment Settings: Create a local `.env` setup file, and supply the environment configuration variables. It should match the setup in the `.env.local.example` file
 
+```
 VITE_BASE_URL=""
 VITE_TARGET="https://node-homework-1yhc.onrender.com"
 VITE_GOOGLE_CLIENT_ID="174295933149-09i1it2go1ssjpqtqam9vdm1pj257aqu.apps.googleusercontent.com"
 VITE_RECAPTCHA_SITE_KEY="should_match_the_recaptcha_site_key_from .env_file_from_node_homework_repository"
+```
 
 Note: to test locally, switch value of VITE_TARGET to point to http://localhost:3000
 
