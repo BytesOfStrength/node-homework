@@ -49,6 +49,7 @@ The application’s main objective is to maintain strict user security in order 
 
 - **Node.js** (v18+)
 - **Git** version control system
+- **PostgreSQL** postgresSQL instance such as docker 
 
 ### Local Installation Steps
 
