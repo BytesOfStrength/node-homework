@@ -1,50 +1,63 @@
-# Getting Started with Node Development
+# Task Management Backend API
 
-Welcome to Code the Dream’s Node/Express class! You will be learning Node.js, an implementation of the JavaScript engine that runs standalone or as a web server. This page describes how to begin. You can develop Node applications on MacOS, Linux, or Windows. If you are developing on Windows, there is no need to do development in a virtual machine, as Node development works fine in Windows native environments, but you can use the Windows Subsystem for Linux if you prefer. You will need to install:
+A secure, production ready Task Management backend REST API built with JavaScript (Node.js), Express framework, and Prisma ORM. This application is connected to a live relational database via Neon PostgreSQL and is optimized to run both as a standalone web service hosted on Render.com and as a database backend engine supporting a React Frontend interface.
 
-- Git
-- Node
-- Postman
-- Postgresql
-- The `node-homework` git repository
+## Project Overview and Purpose
 
-## Git
+This repository contains the complete final project for Code the Dream’s Node/Express course adapted from the foundational homework repository provided by the course into production-ready backend architecture based repository.
 
-The git program is typically already present on MacOS and Linux. You can run
+The application’s main objective is to maintain strict user security in order that only authenticated users have access control and authorization to mutate tasks their specific tasks. This security is accomplished with stateful cookie-based sessions, parse and sanitize data and user information via JOI schema-based validation, and automated token checks. This backend code also manages batch database operations via Prisma’s built-in `createMany`, `deleteMany`, and `updateMany` hooks to execute operations in a single transaction instead of relying on inefficient client-side loops of individual changes.
 
-```
-git --version
-```
+---
 
-to see if it is installed. On Windows, you should install Git for Windows, if you haven’t already. It is available [here.](https://gitforwindows.org/) You will also need an editor. For JavaScript development the VSCode editor is strongly recommended. Finally, you will need to install Node and the Node Package Manager npm. That package is available [here](https://nodejs.org/en/download/). You should install the latest LTS (Long Term Support) version. The other package you need is called Postman. In this class, you create REST APIs. You may have no front end for those APIs, so you need to test them with Postman. The Postman package is available [here](https://www.postman.com/downloads/).
+## Key Features
 
-## Node
+- **Strict Tenant Isolation:** Secure multi-tenant architecture forcing a manual relational evaluation (`userId: req.user.id`) across Prisma queries to block data leakage between user sessions.
+- **Input Validation and Sanitization:** Comprehensive schema guardrails using JOI based schema architecture to filter incoming request objects, validate strings against allowed priority levels (“low”, “medium”, “high”), and scrub data formats before database injection.
+- **Authentication and Session Identity:** Protected user registration using RECAPTCHA bot bypass validation keys, password encryption, and stateful session management utilizing JWTs stored over `HTTPOnly` cookies.
+- **Automated CSRF Defense:** Integrated custom CSRF middleware requiring synchronous verification of double-submitted tokens passed in the request header (`X-CSRF-Token`) across all mutative requests which include POST, PATCH, and DELETE.
+- **Optimized Bulk Operations:**
+  - Use `POST /api/tasks/bulk` to create multiple tasks in a single transaction
+  - Use `PATCH /api/tasks/bulk-update` to modify multiple tasks based on a parameter query filter of completion status
+  - Use `DELETE /api/tasks/bulk-delete` to remove multiple tasks based on an array of target IDs.
+- **Advanced Task Filtering and Controls:** Case insensitive searches, pagination server side lists, dynamic filtering by status `?isCompleted=false`, and eager-loading table joins to attach owner relationships cleanly
 
-For Windows and Mac, the installer for Node is available [here](https://nodejs.org/en/download/).
+---
 
-For Linux, you enter the following commands:
+## Security Framework and Risk Mitigation
 
-```bash
-sudo apt update
-sudo apt install nodejs
-sudo apt install npm
-```
+Backend implements defenses against data misuse and automated bot attacks
 
-**Verify Node.js and npm installation:**
+- **Payload Size Expansion**: The baseline Express JSON parser configuration has been scaled to increase the amount of payload in `app.js` (`app.use(express.json({ limit: "1mb" }));` ) to fully accommodate large multi-character Google reCAPTCHA payloads without dropping request validation
+- **Bot defenses**: When a new user registers, the backend sends the reCaptcha token to Google to verify the user is a real human before saving them to the database
 
-```bash
-node --version
-npm --version
-```
+---
 
-You should see version numbers for both tools.
+## Tech Stack and Dependencies
 
-## PostgreSQL
+- **Node.js**: V8 engine Javascript Server Environment
+- **Prisma ORM**: Type-Safe query builder, migration runner, schema manager
+- **Express.js**: Framework for API routing engine and controller middleware architecture
+- **Neon PostgreSQL**: Serverless cloud database PostgreSQL instance using connection pools
+- **HTTP-Status-Codes**: Standard HTTP response tracking
+- **JOI**: Object schema validation and data scrubbing
 
-You will learn and use the SQL language for relational database access in this course. The SQL database we use is called PostgreSQL. The steps needed to install and configure this package are a little different depending on the platform.
+---
+
+## Instructions on How to Setup Locally and for Development:
+
+### Prerequisites
+
+- **Node.js** (v18+)
+- **Git** version control system
+- **PostgreSQL** Local database instance running
+
+### Local PostgreSQL Configuration
+
+The steps needed to install and configure this package are a little different depending on the platform. Include are steps for PostgreSQL on Mac. For more detailed information refer to the original repository guidance from the node-homework repository by Code the Dream school. https://github.com/Code-the-Dream-School/node-homework
 
 <details>
-<summary style="font-size: 1.3em;">Postgresql on Mac</summary>
+<summary style="font-size: 1.1em; cursor: pointer; font-weight: bold;">Click to expand: PostgreSQL on Mac</summary>
 
 Enter the following commands in a terminal session. The `<username>` you use is your Mac username, that is, the value returned by the whoami command.
 
@@ -57,7 +70,7 @@ CREATE ROLE <username> LOGIN CREATEDB;
 CREATE DATABASE nodehomework OWNER <username>;
 CREATE DATABASE tasklist OWNER <username>;
 CREATE DATABASE testtasklist OWNER <username>;
-\q
+ \q
 ```
 
 **Verify PostgreSQL installation:**
@@ -70,145 +83,30 @@ You should see a version number like `psql (PostgreSQL) 14.x`.
 
 </details>
 
-<details>
-<summary style="font-size: 1.3em;">Postgresql on Windows</summary>
+### Local Installation Steps
 
-To install PostgreSQL, you will need to assign a password for PostgreSQL itself (called the superuser with user ID "_postgres_"). Think of one and write it down. After installation, you will also create another user ID called _`mypguser`_ with its own password. This _`mypguser`_ will be used for database access. Think of a password for _`mypguser`_ and write it down. Of course, don't reuse existing password.
+To run and configure this backend application on your computer do the following steps:
 
-The installer for PostgreSQL for Windows is [here](https://www.postgresql.org/download/windows). Run the install program, accepting all default values. You can watch [this](https://youtu.be/GpqJzWCcQXY?si=2ebcJ6FqmGkLChJL) video from 0:00 - 6:00 to make sure the application is installed correctly.
-
-Once the installation is complete, open the Windows Services panel (_Task Manager_) and verify that the Postgresql service is running. Then open a **`cmd`** prompt (**not Git Bash**) and type the following command, then press "Enter".
-
-**Note**: You need to check your installed **PostgreSQL version**. The command below uses PostgreSQL version **17**.
-
-```
-"C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -h localhost
-```
-
-After running this command, you will be prompted to enter your PostgreSQL password (the one you created during installation for the **postgres superuser**). When you type the password, you won't see any characters appear on screen (not even asterisks \*\*\*\*). This is normal for security reasons. Just type it and press Enter.
-If the connection is successful, you'll see:
-
-```
-psql (17.x)
-Type "help" for help
-postgres=#
-```
-
-This means you're now connected to PostgreSQL! Next, you will need to run a series of PostgreSQL SQL commands that you need to run to set up your database environment.
-
-**Note**: You need to run each command, one at a time, pressing Enter after each one. **Remember** to replace `<pg-password>` with your actual password what you would like to have for _`mypguser`_ before running the first command! SQL commands are typically terminated by a semicolon (;) and strings are enclosed in single quotes '...'
-
-```
-CREATE ROLE mypguser LOGIN CREATEDB PASSWORD '<pg-password>';
-CREATE DATABASE nodehomework OWNER mypguser;
-CREATE DATABASE tasklist OWNER mypguser;
-CREATE DATABASE testtasklist OWNER mypguser;
-\q
-```
-
-</details>
-
-<details>
-<summary style="font-size: 1.3em;">Postgresql on Linux</summary>
-
-On Linux (or WSL) Postgres is installed as follows. The `<username>` is your Linux username, whatever whoami returns.
+1.  **Clone the Repository**
+    Use the command below to download a local copy using Bash:
+    Use copy and paste under https: on code (green button) on github
 
 ```bash
-sudo apt update
-sudo apt install postgresql
-sudo service posgresql start
-sudo -su postgres psql
-CREATE DATABASE nodehomework OWNER <username>;
-CREATE DATABASE tasklist OWNER <username>;
-CREATE DATABASE testtasklist OWNER <username>;
-CREATE ROLE <username> LOGIN CREATEDB;
-\q
+
+git clone git@github.com:BytesOfStrength/node-homework.git
+cd node-homework
 ```
 
-</details>
-
-### The PostgreSQL Service
-
-The steps above won't ensure that the Postgresql service always starts on Mac or Linux. If you reboot, it won't automatically start. This could be fixed, but you don't need it running all the time. You only need it when working on a Node assignment that uses the database, but you will get error messages if you don't start the service when working on those lessons.
-
-The installation procedure for Windows makes the Postgresql service start automatically. You could change this to manual in the services panel, starting the service from that panel when you need it. You don't want your boot times to get longer.
-
-## Additional Steps for Windows
-
-A few additional steps are recommended when setting up a Windows machine for Node development. When you install Git for Windows, you get a terminal shell program called Git Bash. This is the terminal environment you should use for Node development. Do not use cmd.exe or PowerShell, as these terminal environments work differently. With Git Bash, your terminal will work like the Linux or MacOS terminals, so you can enter the same commands as the students with Linux or MacOS. It helps to have some basic understanding of these shell commands: cd, ls, mkdir, touch, pwd. If you are not familiar with these, there is a tutorial [here](https://ubuntu.com/tutorials/command-line-for-beginners#1-overview). You should always start a Git Bash session to issue git, node, or npm commands. You should also configure git to handle line endings in the Linux way, via these commands:
-
-```
-git config --global core.eol lf
-git config --global core.autocrlf input
-```
-
-You should also configure npm to integrate with Git Bash. This is done with the following command:
-
-```
-npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"
-```
-
-You should also configure VSCode to handle line ends as Linux does, and to use Git Bash as the terminal shell. Start VSCode from your Git Bash session by typing
-
-```
-code .
-```
-
-You can then bring up the settings for VSCode by pressing **Ctrl,** (the ctrl key plus the comma). The settings has a _Search settings_ entry field. Type _'line end'_ in that entry field. You will then be able to set the Eol to /n which is what you want. Then do a Search settings for: _'terminal integrated default profile windows'_. This brings up a dropdown, from which you should choose Git Bash. That completes Windows specific setup.
-
-## The `node-homework` Repository
-
-All of your homework, including the class final project, will be created in this repository. You should install it now. There are also some configuration steps.
-
-Create a repository called `node-homework` in your online github account. This repository should be created as public, without a _README_, _gitignore_, or _license file_. **Do not fork** the `node-homework` repository from Code the Dream. Copy the URL for your new repository to your clipboard.
-
-Within a terminal session on your laptop( or PC), open the folder where you want to keep your code, and do:
+2.  **Install dependencies**
+    Use this command to install framework components, security tools, and library assets
 
 ```bash
-    git clone https://github.com/Code-the-Dream-School/node-homework
-```
 
-Then, switch to the `node-homework` directory that you have just cloned, and within the terminal, enter the following commands:
-
-```bash
-git remote set-url origin <URL> # This is the URL of the repository you created.
-git remote add upstream https://github.com/Code-the-Dream-School/node-homework
-git push origin main
 npm install
 ```
 
-You are populating your own repository with the contents of Code the Dream School repository. You do it this way, instead of creating a fork, because you want the default target for your homework pull requests to be your own repository. The `npm install` gives you the packages you need to run the homework programs.
-
-Once in a while, it may be necessary to get updates from Code the Dream for some code that's included with this repository. That is the purpose of the upstream remote. If this happens, a mentor will post instructions on how to pull down the update or you'd do the following:
-
-```bash
-git checkout main
-git pull upstream main
-```
-
-You may have an assignment branch active when these updates are needed. So then you'd do:
-
-```bash
-git checkout main
-git pull upstream main
-git checkout assignmentx # the branch you were working in
-git merge main
-```
-
-If you have uncommitted changes in your working branch, the `git checkout main` may give an error message. So then you'd do:
-
-```bash
-git stash
-git checkout main
-git pull upstream main
-git checkout assignmentx # the branch you were working in
-git merge main
-git stash apply
-```
-
-This procedure should be infrequent -- only when changes are made to the course.
-
-Last thing, you need to create a _**.env**_ file in the root of the `node-homework` folder. The format of this file depends on your operating system.
+3. **Environment Configuration File for local setup and local testing:**
+   Create a `.env` file in the root of the `node-homework` folder. The format of this file depends on your operating system.
 
 <details>
 <summary>The .env file for the Mac</summary>
@@ -217,100 +115,252 @@ Last thing, you need to create a _**.env**_ file in the root of the `node-homewo
 DB_URL=postgresql://<username>@localhost/nodehomework?host=/tmp
 DATABASE_URL=postgresql://<username>@localhost/tasklist?host=/tmp
 TEST_DATABASE_URL=postgresql://<username>@localhost/testtasklist?host=/tmp
+JWT_SECRET="local_development_secret_signature_string"
+RECAPTCHA_BYPASS="local_development_bypass_phrase"
 ```
 
 </details>
 
-<details>
-<summary>The .env file for Windows</summary>
+## Validating Your `node-homework` Configuration locally
 
-You use the password you created for the `mypguser` PostgreSQL user, substituting that for `<pg-password>` below.
-
-```
-DB_URL=postgresql://mypguser:<pg-password>@localhost/nodehomework
-DATABASE_URL=postgresql://mypguser:<pg-password>@localhost/tasklist
-TEST_DATABASE_URL=postgresql://mypguser:<pg-password>@localhost/testtasklist
-```
-
-</details>
-
-<details>
-<summary>The .env file for Linux</summary>
-
-```
-DB_URL=postgresql://<username>@localhost/nodehomework?host=/var/run/postgresql
-DATABASE_URL=postgresql://<username>@localhost/tasklist?host=/var/run/postgresql
-TEST_DATABASE_URL=postgresql://<username>@localhost/testtasklist?host=/var/run/postgresql
-```
-
-</details>
-
-## Validating Your `node-homework` Configuration
-
-From your `node-homework` folder, run the following:
+1. From your `node-homework` folder, run the following:
 
 ```bash
 node load-db
 ```
 
-You should see messages that tables have been loaded. If this doesn't work, ask a mentor or another student for help. Remember that the PostgreSQL service must be running when you do this command.
+You should see messages that tables have been loaded.
 
-### What is the `load-db.js` file?
+## Generate the Prisma Engine Client
 
-The `load-db.js` file is a **database setup script** that:
-
-- **Creates 5 database tables**: _customers_, _employees_, _products_, _orders_, and _line_items_
-- **Loads sample data** from CSV files in a `./csv/` folder
-- **Sets up relationships** between tables (foreign keys)
-- **Validates your database connection** is working
-
-When you run `node load-db`, it builds a complete business database system that you'll use for your assignments. Make sure PostgreSQL is running and the `./csv/` folder exists with the required data files.
-
-**Note:** You can see these 5 database tables by using _pgAdmin 4_ (the desktop GUI application for managing and developing PostgreSQL databases, provided when you install PostgreSQL) following:
-
-    pgAdmin 4 => Servers => PostgreSQL 17 => Databases => notehomework => Schemas => public => Tables
-
-## Your Assignments
-
-Each of your assignments will be created in the `node-homework` directory. Before you start work on the assignment, you create a git branch for it. For example, for the week 1 assignment, you would change to the `node-homework` directory and enter the command
-
-```
-git checkout -b assignment1
-```
-
-Then, from the `node-homework` folder type `code .` to bring up VSCode for that directory. It is a good idea to do git add and commit operations several times as you work on an assignment, whenever your code is stable. You give each commit a meaningful message so that you know how far you got.
-
-When you have finished the week’s assignment, you push it to github as follows:
-
-```
-git status
-git add -A
-git commit -m "Completion of week 1 assignment"
-git push origin assignment1
-```
-
-You then go to github and open your `node-homework` repository. You create a pull request. Open the assignment submission form for the class. Include a link to your pull request in that form. **Do not merge the pull request until your reviewer approves it.** Each assignment should be developed in its own feature branch, created from the latest version of the main branch. This keeps your work isolated and avoids carrying over unfinished code from earlier assignments.
-Before creating a new branch, make sure your local `main` branch is up to date:
+1. To build custom JavaScript code engine to run prisma commands, run this terminal command:
 
 ```bash
-git checkout main
-git pull origin main
-git checkout -b assignment2
+npx prisma generate
 ```
 
-## The `node-homework` Project Structure
+## Launch Prisma Studio (optional)
 
-- `assignment1/`, `assignment2/`, ...: Folders for assignments or parts of assignments that are not part of the final project.
-- `tdd/`: All TDD for homework assignments.
-- `tests/`: For assignment9 on testing.
-- `project-links.txt`: Record links to PRs for the React repository and URLs of deployed React and Node apps. You won't need this until lesson 10.
-- Usual Express files (e.g., `app.js`, `routes/`, `controllers/`, `utils/`, `models/`, `tests/`, etc.) will be present in the root or as needed for the Node/Express app.
-- `package.json`: Single package file for the whole project.
-- The repository is structured for cloud deployment.
+1. To verify database schemas, inspect data tables or browse rows through a visual dashboard instead of writing raw SQL commands, execute Prisma’s interface engine locally:
 
-## Good Luck With the Class, and Happy Coding!
+```bash
+npx prisma studio
+```
+
+## Execution Command to ensure local tests pass automated local testing suites
+
+1. Run the local automated integration test pipeline to verify code path handling:
+
+```bash
+npm run test
+```
+
+- Note on Test Suite Results: Because this production-ready backend enforces strict JOI schema validation and automated reCAPTCHA bot defense across all user registration endpoints, certain baseline curriculum test designed around unverified inputs will fail by default during a standard local execution.
+  These intentional failures occur because the original testing suite does not pass the custom `X-Recaptcha-Test` header parameters required to cleanly bypass the live bot-handshake validation layers. This behavior confirms that the security guardrails are successfully blocking unverified automated registrations as designed.
+
+## Start Local Application Express server
+
+```bash
+npm run dev
+```
+
+The local API server will start and run on machine at `http://localhost:3000`
+
+---
+
+### Cloud database Infrastructure to connect Back End to a Cloud Resident Postgres Database
+
+1. Create or log into your account on Neon.tech
+2. Create a new project called node-homework. This creates a Postgres database on Neon. A connection string (a URL) will be shown. Copy the connection string
+3. Edit the `.env  ` file in your node-homework directory. Update the DATABASE_URL so `DATABASE_URL= connection string value from the Neon.tech project you just made for node-homework.` Be careful with the connection string! It contains a password. Because you are putting it in the .env file, it won't be stored in Github.
+4. Stop the back end app in node-homework if it is running.
+5. In the terminal session, do the following command:
+
+```bash
+npx prisma migrate deploy
+```
+
+This command creates the tables your app needs in the Neon database, according to the schema in your Prisma schema file.
+
+### Environment Configuration File For Production and Deployment
+
+If transitioning local context to deployment configurations using cloud based infrastructures (like Neon.tech and Render.com), the `.env` settings must match the values for the production cloud credential variables below:
+There is a created `.env.local.example` in the node-homework repository for reference:
+
+- Cloud based database connection string that you are assigned when you get neon.tech account
+  - DATABASE_URL= "postgresql://<db_user>:<db_password>@<neon_host_string>.neon.tech/<db_name>?sslmode=require"
+
+- Stateful security token string for digital signatures
+  - JWT_SECRET=your_random_chosen_alphanumeric_string_digital_signature
+
+- Security and Bot-Bypass strings:
+  - RECAPTCHA_SECRET="your_production_recaptcha_secret_key_string" (this is the key you get if you personally logon to google and Adding reCAPTCHA Support for your own project)
+  * RECAPTCHA_BYPASS="your_configured_recaptcha_development_bypass_phrase"
+
+* GOOGLE_CLIENT_ID given value that matches the value in node-essentials-front-end repository
+  - GOOGLE_CLIENT_ID="174295933149-09i1it2go1ssjpqtqam9vdm1pj257aqu.apps.googleusercontent.com"
+
+**Note for Developers using reCAPTCHA**:
+By default the registration endpoint has GOOGLE reCAPTCHA bot protection. If you clone this repository, you have two options for local testing:
+
+- **Option 1: Use the Built-In Bypass (Quick Testing)** : Ensure that the `RECAPTCHA_BYPASS` variable's value is in your local `.env` file and matches across your configuration. When testing endpoints via Postman or JEST where a frontend token widget is not available, you need to supply a custom header parameter tracking your secret phrase:
+  - **Header key**: `X-Recaptcha-Test`
+  - **Header value**: `RECAPTCHA_BYPASS` string value
+- **Option 2: Full Production Testing**: If you want to test the live Google Network handshake then
+  - Go to https://www.google.com/recaptcha/admin. You'll have to log on to Google if you haven't already.
+  - Select the form that says "Register a new site." Give it some label, like "my ctd node homework".
+  - Generate a pair of two v2 keys for the `localhost`
+    You will be given two keys, the site key and the secret key. Save the site key in a comment in your node-homework .env file, and save the secret in a variable, like:
+
+# reCAPTCHA site key gobbledygook
+
+# RECAPTCHA_SECRET=othergobbledygook
+
+Create a hard to guess secret. Add it to your .env file as RECAPTCHA_BYPASS. This is for testing. Add your secrets directly to your environmental variables.
+
+## Production Cloud Deployment Configuration using Render.com
+
+This backend application works with Render.com
+Follow these steps:
+
+1.  Create a Render.com account or login and connect with your Github account
+2.  Click New+ and select Webservice
+3.  Select `node-homework` repository
+4.  Supply the following settings:
+    - **Runtime:** Node
+    - **Branch:** main
+    - **Build command:** `npm install --production && npx prisma migrate deploy`
+    - **Start command:** `npm start`
+
+5.  Add environment variables matching those in your local `.env` file by clicking `Add .env` button
+
+- **DATABASE_URL**
+- **JWT_SECRET**
+- **RECAPTCHA_BYPASS**
+- **RECAPTCHA_SECRET**
+
+6. Click **Deploy Web Service**: look for a green live status indicator
+
+## Postman Integration and Testing
+
+Every endpoint, request constraint, and database operation can be verified without a user interface by routing requests through Postman. Here we will assume using the render.com to be the cloud server for the backend service endpoint.
+
+- Note: make sure Postman global parameters have "enable cookie jar" checked so stateful session cookies persist automatically
+
+### Step 1. Authentication and Identity verification
+
+- **Endpoints**:
+  _ Registration: `POST {{urlBase}}/api/users/register`
+  _ Logon:`POST {{urlBase}}/api/users/logon`
+
+- Save in Postman environment `urlBase` with a value of the https://node-homework-1yhc.onrender.com
+
+- **Body format:** `raw (JSON)`
+- **Payload structure:**
+  {
+  "email": "email@example.com",
+  "password": "your_secure_password"
+  }
+
+- **System Action**: Successful registration or logon attaches a secure session cookie (visible in Postman under `jwt` identifier) and returns a `csrfToken` in the response body. Copy this token and save it as `csrfToken` Postman environment variable. It must be included as the `X-CSRF-Token` header in all subsequent task modification requests (POST, PATCH, DELETE) to verify your authorizations and prevent CSRF (cross site request forgery).
+
+### Step 2. (OPTIMIZED ADDITIONAL FUNCTIONALITY ADDED)
+
+- **Bulk Task Update:**
+
+* Endpoint request method: `PATCH`
+* For URL : `{{urlBase}}/api/tasks/bulk-update?isCompleted=false`
+* Query Parameter Logic: ?isCompleted=false (This targets incomplete records only)
+* Required Headers Configuration:
+  `Content-Type: application/json`
+  `X-CSRF-Token`: copy_the_csrfToken_of_the_authenticated_user or program it automatically by using `{{csrfToken}}` assuming the csrfToken has been updated in the environment of Postman
+* Body Format: `raw(JSON)`
+* **Payload Structure**: { "isCompleted": true}
+* **Expected JSON success response (200 OK)**:
+  { "message": "Bulk task update successful",
+  "tasksUpdated": number of tasks updated
+  }
+
+- **Bulk Task Deletions**
+
+* Endpoint request method: `DELETE`
+* For URL : `{{urlBase}}/api/tasks/bulk-delete`
+* Required Headers Configuration:
+  `Content-Type: application/json`
+  `X-CSRF-Token`: copy_the_csrfToken_of_the_authenicated_user or program it automatically by using `{{csrfToken}}` assuming the csrfToken has been updated in the environment of Postman
+* Body Format: `raw (JSON)`
+* Payload Structure:
+  {
+  "ids":[1,2,3]
+  }
+* Expected JSON success response (200 OK):
+  { "message": "Bulk task deletion successful",
+  "tasksDeleted": 3,
+  "TotalRequested": 3
+  }
+
+## Frontend Connection Compatibility
+
+This API layer is designed to support client interactions from the curriculum-provided user interface engine (`node-essentials-front-end`).
+
+### Connecting to the React Front end Client Application
+
+Clone the client-side application structure from the code development repository:
+
+1. **Clone the Repository**
+   Use the command below to download a local copy using Bash:
+   Use copy and paste under https: on code (green button) on github
+
+```bash
+
+
+git clone https://github.com/Code-the-Dream-School/node-essentials-front-end
+cd node-essentials-front-end
+npm install
+```
+
+2. Configure Frontend Environment Settings: Create a local `.env` setup file, and supply the environment configuration variables. It should match the setup in the `.env.local.example` file
+
+```
+VITE_BASE_URL=""
+VITE_TARGET="https://node-homework-1yhc.onrender.com"
+VITE_GOOGLE_CLIENT_ID="174295933149-09i1it2go1ssjpqtqam9vdm1pj257aqu.apps.googleusercontent.com"
+VITE_RECAPTCHA_SITE_KEY="should_match_the_recaptcha_site_key_from .env_file_from_node_homework_repository"
+```
+
+Note: to test locally, switch value of VITE_TARGET to point to http://localhost:3000
+
+3. To execute client side development server engine
+
+```bash
+
+npm run dev
+```
+
+The local host should run at `http://localhost: 3001`
+
+Because both Postman requests and client React front-end communicate with the same centralized Node.js processing pathways and cloud Neon database, database mutations sync in real time.
+
+## Future Implementations:
+
+- **Google OAuth 2.0 Integration**: support single sign-on via Google login buttons. This will involve getting an unique GOOGLE_CLIENT_SECRET and personal GOOGLE_CLIENT_ID via the Google Cloud Console, setting up secure backend callback redirect routes, and syncing profile tokens securely with the React client application.
+- **Frontend UI Bulk Operations:** Update React UI to include checkboxes next to task on the dashboard, enabling users to natively trigger backend’s bulk-update and bulk-delete endpoints directly from the browser.
+
+## API Endpoints and Data Fetching
+
+# API sources
+
+I am thankful for the open-source services and API's that provided the information needed to run the the front-end api, as well as provide the foundational core of this project's node-homework repository
+**Sources**: Code the Dream provided the React front end repository: https://github.com/Code-the-Dream-School/node-essentials-front-end as well as the foundational start for the backend end api for the node-homework repository.
+
+Credit: Code the Dream
+
+## Copyright and Licensing:
 
 ## License
 
+- **Licensing and Permission:** Code from this repository should not be cloned without giving credit to the original repository
+
+The Foundational node-homework project and the node-eseentials-front-end has a copyright from Code the Dream
 Copyright (c) 2025 Code the Dream
 This project is licensed under the MIT License – see the [LICENSE](./LICENSE) file for details.

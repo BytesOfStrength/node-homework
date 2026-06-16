@@ -1,2 +1,85 @@
 #urlBase used for deployed application on Render.com
 https://node-homework-1yhc.onrender.com
+
+#my assignment11 Pull request for the node-homework backend 
+https://github.com/BytesOfStrength/node-homework/pull/11
+
+#to use the React based front end user interface from Code the Dream, clone the following repo:
+https://github.com/Code-the-Dream-School/node-essentials-front-end .
+
+#then do the following steps to call the Back End Application from the REACT Front End
+For this step, create a new terminal session.  Make sure that your active directory is not the node-homework folder.  You want the front end files to be completely separate.
+Do a git clone for the following URL: https://github.com/Code-the-Dream-School/node-essentials-front-end .
+Change to the node-essentials-front-end folder. Then do an `npm install` to get the packages you need.
+Create a `.env file.` It should have four lines:
+
+VITE_BASE_URL=""
+#VITE_TARGET="http://localhost:3000" (if using localhost)
+
+#to use Render url, change the VITE_TARGET to point to Render URL
+VITE_TARGET="https://node-homework-1yhc.onrender.com" 
+
+VITE_RECAPTCHA_SITE_KEY="gobbledygook"
+VITE_GOOGLE_CLIENT_ID="174295933149-09i1it2go1ssjpqtqam9vdm1pj257aqu.apps.googleusercontent.com"
+
+#The site key is the one that you saved in a comment in your node-homework .env file.Update the VITE_RECAPTCHA_SITE_KEY to match the one from the node-homework .env file. Have a look at the vite.config.js file. It reroutes all requests for "/api" to the address specified in VITE_TARGET. VITE_BASE_URL is an artifact of the current configuration. You have to set it to "", but it will be eliminated in the future.VITE_GOOGLE_CLIENT_ID is also an artifact. You have to set it in order for the React front end to come up, but Google logon won't work as it is not enabled on your back end app.
+
+# Cloud Database Connection
+This application utilized Neon PostgreSQL for a cloud resident PostgreSQL database. The live runtime securely binds to the remote instance via `DATABASE_URL` pooling connection string in the `.env` settings. The database schemas and tables are synced by running the Prisma migration engine (`npx prisma migrate deploy`) to ensure real time updates.
+
+=============================================================
+Extra Functionality Added: bulk operations (update and delete)
+==============================================================
+I implemented two advanced bulk endpoints to enable users to modify or remove collections of tasks at the same time using efficient database batch operations (Prisma's updateMany and deleteMany). Both endpoints feature strict user isolation, forcing `userId: req.user.id`, to ensure users can only update or delete their own records. 
+
+How to test the endpoints : 
+1. Feature: Bulk Task Update
+  * Path: /api/tasks/bulk-update
+  * Method: PATCH
+  * Query Parameters: 
+     * isCompleted (boolean string): determines which group of tasks to target. 
+       Use `?isCompleted=false` to target incomplete tasks, or 
+       use `?isCompleted=true` to target completed tasks.
+  * Request Body (JSON raw). Since I want to target incomplete tasks and change them to completed tasks, I would provide the property that I want to update. In this example, I would type the following in the request Body: 
+    {
+      "isCompleted": true
+    }
+
+  How to test via Postman: 
+    1. Authenticate with API first to establish session by logging in with a user that is already registered.
+    2. Set the HTTP request method to PATCH.
+    3.Save in the environment for Postman (key:value) urlBase: value will equal the url from your render.com webservice; otherwise you can use {{host}} instead and set the url to be the local host port of your Backend application which is again saved in your environment for Postman.
+
+    For example in this application  urlBase : https://node-homework-1yhc.onrender.com
+    
+     Use URL: {{urlBase}}/api/tasks/bulk-update?isCompleted=false
+    4.Make sure to have your active 'X-CSRF-Token' added to request headers 
+    5. In Body tab, select 'raw' and 'JSON', then pass:
+    {
+      "isCompleted": true
+    }
+    6.Click Send. API should process batch operation and return a 200 OK along with 'tasksUpdated' count.
+
+2. Feature: Bulk Task Deletion
+  * Path: /api/tasks/bulk-delete
+  * Method:DELETE
+  * Query Parameters: 
+     none
+  * Request Body (JSON raw): 
+    {
+      "ids": [1, 2, 3]
+    }
+  How to test via Postman: 
+    1. Authenticate with API first to establish session by logging in with a user that is already registered.
+    2. Set the HTTP request method to DELETE.
+    3.Save in the environment for Postman (key:value) urlBase: value will equal the url from your render.com webservice; otherwise, you can use {{host}} instead and set the url to be the local host port of your Backend application which is again saved in your environment for Postman.
+
+    For example in this application urlBase : https://node-homework-1yhc.onrender.com
+    
+     Use URL: {{urlBase}}/api/tasks/bulk-delete
+    4.Make sure to have your active 'X-CSRF-Token' added to request headers 
+    5. In Body tab, select 'raw' and 'JSON', then pass an array of target IDs that you want to remove:
+    {
+      "ids":[1 , 2 , 3]
+    }
+    6.Click Send. API processes the batch, sanitizes string ids into integers, executes deletion, and returns a 200 OK along with 'tasksDeleted' count.

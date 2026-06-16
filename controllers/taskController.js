@@ -10,7 +10,6 @@ const prisma = require("../db/prisma");
 //POST / api / tasks / bulk;
 const bulkCreate = async (req, res, next) => {
   const { tasks } = req.body;
-
   //Validate the tasks array
   if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
     return res.status(StatusCodes.BAD_REQUEST).json({
@@ -52,7 +51,7 @@ const bulkCreate = async (req, res, next) => {
     return next(err);
   }
 };
-//need create
+//need create POST /api/tasks
 const create = async (req, res, next) => {
   if (!req.body) req.body = {};
   const { error, value } = taskSchema.validate(req.body, { abortEarly: false });
@@ -191,6 +190,47 @@ const show = async (req, res, next) => {
     return next(err);
   }
 };
+//need bulk update:
+const bulkUpdateTasks = async (req, res, next) => {
+  const { isCompleted } = req.query;
+
+  // is there a query?
+  if (isCompleted === undefined) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({
+        error: "Please add ?isCompleted=true or ?isCompleted=false to the URL.",
+      });
+  }
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "No update data in the request body.",
+    });
+  }
+  const {error, value}= patchTaskSchema.validate(req.body, {abortEarly:false})
+  if(error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({message: error.message});
+  }
+  try {
+    const filterValue = isCompleted === "true"; //if string is true, filterValue is boolean True.
+    //update command from prisma
+    const result = await prisma.task.updateMany({
+      where: {
+        userId: req.user.id,
+        isCompleted: filterValue,
+      },
+      data: value, //value post JOI validation schema
+    });
+    return res.status(StatusCodes.OK).json({
+      message: "Bulk task update successful",
+      tasksUpdated: result.count,
+    });
+    //send DB errors to Express error handler
+  } catch (err) {
+    return next(err);
+  }
+};
+
 //need update
 const update = async (req, res, next) => {
   if (!req.body) req.body = {};
@@ -263,4 +303,44 @@ const deleteTask = async (req, res, next) => {
     }
   }
 };
-module.exports = { bulkCreate, create, index, show, update, deleteTask };
+//POST / api / tasks / bulk-delete;
+const bulkDeleteTasks = async (req, res, next) => {
+  const { ids } = req.body;
+  //Validate the tasks array
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: "Invalid request data. Expected an array of task IDs.",
+    });
+  }
+  // Use deleteMany for batch deletion and ensure if a string is entered, convert to int
+  try {
+    const numIds = ids.map((id) => parseInt(id, 10));
+    const result = await prisma.task.deleteMany({
+      where: {
+        id: {
+          in: numIds,
+        },
+        userId: req.user.id,
+      },
+    });
+
+    res.status(200).json({
+      //message: "success!",
+      message: "Bulk task deletion successful",
+      tasksDeleted: result.count,
+      totalRequested: ids.length,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+module.exports = {
+  bulkCreate,
+  create,
+  index,
+  show,
+  update,
+  deleteTask,
+  bulkDeleteTasks,
+  bulkUpdateTasks,
+};

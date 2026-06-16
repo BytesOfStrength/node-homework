@@ -10,15 +10,21 @@ const {
   show,
   update,
   deleteTask,
+  bulkDeleteTasks,
+  bulkUpdateTasks,
 } = require("../controllers/taskController");
-
-//router.use(jwt); I commented this out because app.js will use the jwtMiddleware on taskRoutes
 // post/api/tasks
 //GET / - List tasks with pagination, eager loading, and search filter
 //POST /  - Create single task
 router.route("/").post(create).get(index);
 //Lesson7 add bulkCreate route.  POST api/tasks/bulk Bulk create Task (createMany)
 router.route("/bulk").post(bulkCreate);
+
+//L11 add bulkDelete route DELETE api/tasks/bulkDelete
+router.route("/bulk-delete").delete(bulkDeleteTasks);
+//L11: add bulkUpdate route
+//PATCH /:id for bulk tasks PATCH  api/tasks/bulkUpdate
+router.route("/bulk-update").patch(bulkUpdateTasks);
 //GET /:id -Show task with user info(eager loading), PATCH /:id -update task  DELETE /:id -Delete task
 router.route("/:id").get(show).patch(update).delete(deleteTask);
 
